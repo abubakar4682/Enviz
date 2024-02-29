@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:highcharts_demo/widgets/StartingndEnding.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:get/get.dart';
@@ -7,18 +6,20 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 
 
-class ApiController extends GetxController {
+class HistoricalController extends GetxController {
 
   RxString startDate = '2024-01-07'.obs;
-  RxString endDate = '2024-01-07'.obs;
+  RxString endDate = '2024-01-10'.obs;
   RxMap<String, dynamic>? firstApiData = <String, dynamic>{}.obs;
   RxMap<String, dynamic>? secondApiData = <String, dynamic>{}.obs;
 
   RxList<String> result = <String>['0', '0', '0'].obs;
+  RxList<Map<String, dynamic>> kwData = <Map<String, dynamic>>[].obs;
   @override
   void onInit() {
     fetchFirstApiData();
     fetchSecondApiData();
+    fetchData();
     super.onInit();
   }
   Future<void> selectEndDate(BuildContext context) async {
@@ -31,6 +32,8 @@ class ApiController extends GetxController {
     if (picked != null) {
       endDate(picked.toLocal().toString().split(' ')[0]);
       await fetchSecondApiData();
+      kwData.clear();
+      await fetchData();
     }
   }
   Future<void> selectStartDate(BuildContext context) async {
@@ -40,8 +43,55 @@ class ApiController extends GetxController {
       firstDate: DateTime(2023),
       lastDate: DateTime(2025),
     );
-    if (picked != null) startDate(picked.toLocal().toString().split(' ')[0]);
+    if (picked != null) {startDate(picked.toLocal().toString().split(' ')[0]);
+    kwData.clear();
+    };
   }
+
+  Future<void> fetchData() async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? storedUsername = prefs.getString('username');
+      final String appuril= 'http://203.135.63.22:8000/data?username=$storedUsername&mode=hour&start=${startDate.value}&end=${endDate.value}';
+      final response = await http.get(Uri.parse(appuril));
+
+print(appuril);
+
+      try {
+        if (response.statusCode == 200) {
+          Map<String, dynamic> jsonData = json.decode(response.body);
+          Map<String, dynamic> data = jsonData['data'];
+
+          data.forEach((itemName, values) {
+            if (itemName.endsWith("[kW]")) {
+              String prefixName = itemName.substring(0, itemName.length - 4);
+              List<double> numericValues = (values as List<dynamic>).map((value) {
+                if (value is num) {
+                  // Convert to kW (divide by 1000)
+                  return value.toDouble() / 1000.0;
+                } else if (value is String) {
+                  // Convert to double and then to kW (divide by 1000)
+                  return (double.tryParse(value) ?? 0.0) / 1000.0;
+                } else {
+                  return 0.0;
+                }
+              }).toList();
+
+              kwData.add({'prefixName': prefixName, 'values': numericValues});
+            }
+          });
+        } else {
+          print('Failed to fetch data. Status code: ${response.statusCode}');
+        }
+      } catch (error) {
+        print('Error fetching data: $error');
+      }
+    } catch (error) {
+      print('An unexpected error occurred: $error');
+    }
+  }
+
+
   Future<void> fetchFirstApiData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? storedUsername = prefs.getString('username');
@@ -101,6 +151,13 @@ class ApiController extends GetxController {
   String formatValue(double value) =>
       value >= 1000 ? '${(value / 1000).toStringAsFixed(2)}kW' : '${(value / 1000).toStringAsFixed(2)}kW';
   String formatValued(double value) => (value / 1000).toStringAsFixed(2); //
+
+
+
+
+
+
+
 }
 
 
@@ -119,118 +176,3 @@ class ApiController extends GetxController {
 
 
 
-
-//
-// class MyAppsss extends StatelessWidget {
-//   final ApiController apiController = Get.put(ApiController());
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(
-//         title: Text('API Response'),
-//       ),
-//       body: Center(
-//         child: Column(
-//           mainAxisAlignment: MainAxisAlignment.center,
-//           crossAxisAlignment: CrossAxisAlignment.center,
-//           children: [
-//             SelectStartndEndingDate(controller: apiController, context: context),
-//
-//             Obx(() {
-//               final firstApiData = apiController.firstApiData!.value;
-//               if (firstApiData == null || firstApiData.isEmpty) {
-//                 return CircularProgressIndicator();
-//               } else {
-//                 if (firstApiData.containsKey("Main")) {
-//                   return _buildUiForMain(firstApiData);
-//                 } else {
-//                   List<String> modifiedKeys = firstApiData.keys
-//                       .map((key) => '$key\_[kW]')
-//                       .toList();
-//                   return _buildUiForOther(modifiedKeys);
-//                 }
-//               }
-//             }),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-//
-//   Widget _buildUiForMain(Map<String, dynamic> firstApiResponse) {
-//     return Obx(() {
-//       final secondApiData = apiController.secondApiData!.value;
-//       if (secondApiData == null || secondApiData.isEmpty) {
-//         return CircularProgressIndicator();
-//       } else {
-//         List<double> sumsList = [];
-//         for (int i = 0; i < secondApiData["Main_[kW]"].length; i++) {
-//           double sum = apiController.parseDouble(secondApiData["Main_[kW]"][i]);
-//           sumsList.add(sum);
-//         }
-//
-//         double totalSum = apiController.calculateTotalSum(sumsList);
-//         double minSum = apiController.calculateMin(sumsList);
-//         double maxSum = apiController.calculateMax(sumsList);
-//         double avgSum = apiController.calculateAverage(sumsList);
-//
-//         return _buildSummaryUi(totalSum, minSum, maxSum, avgSum);
-//       }
-//     });
-//   }
-//
-//   Widget _buildUiForOther(List<String> modifiedKeys) {
-//     return Obx(() {
-//       final secondApiData = apiController.secondApiData!.value;
-//       if (secondApiData == null || secondApiData.isEmpty) {
-//         return CircularProgressIndicator();
-//       } else {
-//         List<double> sumsList = [];
-//         for (int i = 0; i < secondApiData['1st Floor_[kW]'].length; i++) {
-//           double sum = apiController.parseDouble(secondApiData['1st Floor_[kW]'][i]) +
-//               apiController.parseDouble(secondApiData['Ground Floor_[kW]'][i]);
-//           sumsList.add(sum);
-//         }
-//
-//         double totalSum = apiController.calculateTotalSum(sumsList);
-//         double minSum = apiController.calculateMin(sumsList);
-//         double maxSum = apiController.calculateMax(sumsList);
-//         double avgSum = apiController.calculateAverage(sumsList);
-//
-//         return _buildSummaryUi(totalSum, minSum, maxSum, avgSum);
-//       }
-//     });
-//   }
-//
-//   Widget _buildSummaryUi(double totalSum, double minSum, double maxSum, double avgSum) {
-//     return Center(
-//       child: Column(
-//         mainAxisAlignment: MainAxisAlignment.center,
-//         crossAxisAlignment: CrossAxisAlignment.center,
-//         children: [
-//           _buildSummaryText('Total Power:', apiController.formatValue(totalSum)),
-//           _buildSummaryText('Min Power:', apiController.formatValue(minSum)),
-//           _buildSummaryText('Max Power:', apiController.formatValue(maxSum)),
-//           _buildSummaryText('Average Power:', apiController.formatValue(avgSum)),
-//         ],
-//       ),
-//     );
-//   }
-//
-//   Widget _buildSummaryText(String title, String value) {
-//     return Column(
-//       children: [
-//         Text(
-//           title,
-//           style: TextStyle(fontWeight: FontWeight.bold),
-//         ),
-//         Text(
-//           ' $value',
-//           style: TextStyle(fontSize: 18),
-//         ),
-//         Divider(),
-//       ],
-//     );
-//   }
-// }

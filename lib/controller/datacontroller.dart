@@ -15,6 +15,7 @@ import '../widgets/bottom_navigation.dart';
 
 class DataControllers extends GetxController {
   RxList<Map<String, dynamic>> kwData = <Map<String, dynamic>>[].obs;
+  Map<String, Map<String, double>> dailyItemSumsMap = {};
   RxBool showPassword = false.obs;
   RxDouble lastMainKWValue = 0.0.obs;
   RxBool loading = false.obs;
@@ -25,7 +26,7 @@ class DataControllers extends GetxController {
   var password = ''.obs;
   Map<String, double> dailySumMap = {};
   // Declare dailyItemSumsMap as a public property
-  Map<String, Map<String, double>> dailyItemSumsMap = {};
+
   Map<String, Map<String, double>> dailyItemSumsMapforMonth = {};
   Map<String, double> nameAndSumMap = {};
   final int pakistaniTimeZoneOffset = 10;
@@ -613,6 +614,8 @@ class DataControllers extends GetxController {
       print('An unexpected error occurred: $error');
     }
   }
+
+
 
   // Future<void> fetchDataformonth() async {
   //   final username = usernamenameController.text.toString();

@@ -237,6 +237,7 @@ class _SummaryState extends State<Summary> {
                   ),
                   Container(
                       height: 400,
+
                       child: WeekChart(
                         controllers: summaryController,
                       )),

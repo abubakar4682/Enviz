@@ -1,41 +1,48 @@
-import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:highcharts_demo/widgets/BoxwithIcon.dart';
+import 'package:highcharts_demo/widgets/CustomText.dart';
+import 'package:highcharts_demo/widgets/SideDrawer.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
-class MyHomePage extends StatefulWidget {
+import 'highcharts/line_charts.dart';
 
-  @override
-  _MyHomePageState createState() => _MyHomePageState();
-}
+class ApiController extends GetxController {
+  String firstApiUrl = 'http://203.135.63.22:8000/buildingmap?username=ppjiq';
+  String secondApiUrl = '';
 
-class _MyHomePageState extends State<MyHomePage> {
-  final String firstApiUrl = 'http://203.135.63.22:8000/buildingmap?username=ahmad';
-  final String secondApiUrl = 'http://203.135.63.22:8000/data?username=ahmad&mode=hour&start=2024-02-11&end=2024-02-11';
+  final firstApiResponse = Rxn<Map<String, dynamic>>();
+  final secondApiResponse = Rxn<Map<String, dynamic>>();
 
-  Future<Map<String, dynamic>> fetchFirstApiData() async {
+  void fetchFirstApiData() async {
     final response = await http.get(Uri.parse(firstApiUrl));
 
     if (response.statusCode == 200) {
-      return json.decode(response.body);
+      firstApiResponse.value = json.decode(response.body);
     } else {
       throw Exception('Failed to load data from the first API');
     }
   }
 
-  Future<Map<String, dynamic>> fetchSecondApiData(List<String> keys) async {
+  void fetchSecondApiData(String date) async {
+    secondApiUrl =
+    'http://203.135.63.22:8000/data?username=ppjiq&mode=hour&start=$date&end=$date';
     final response = await http.get(Uri.parse(secondApiUrl));
+    print(secondApiUrl);
 
     if (response.statusCode == 200) {
-      Map<String, dynamic> secondApiResponse = json.decode(response.body);
+      Map<String, dynamic> secondApiResponseData = json.decode(response.body);
       Map<String, dynamic> filteredData = {};
 
+      List<String> keys = secondApiResponseData['data'].keys.toList();
       keys.forEach((key) {
-        if (secondApiResponse['data'].containsKey(key)) {
-          if (secondApiResponse['data'][key].isEmpty) {
+        if (secondApiResponseData['data'].containsKey(key)) {
+          if (secondApiResponseData['data'][key].isEmpty) {
             filteredData[key] = List<double>.filled(24, 0.0);
           } else {
-            List<dynamic> dataList = secondApiResponse['data'][key];
+            List<dynamic> dataList = secondApiResponseData['data'][key];
             List<double> sanitizedDataList = dataList.map((value) {
               if (value == null || value == "NA") {
                 return 0.0;
@@ -48,7 +55,7 @@ class _MyHomePageState extends State<MyHomePage> {
         }
       });
 
-      return filteredData;
+      secondApiResponse.value = filteredData;
     } else {
       throw Exception('Failed to load data from the second API');
     }
@@ -60,109 +67,163 @@ class _MyHomePageState extends State<MyHomePage> {
     }
     return double.tryParse(value.toString()) ?? 0.0;
   }
+}
 
-  double calculateTotalSum(List<double> sums) => sums.reduce((total, current) => total + current);
-
-  double calculateMin(List<double> sums) => sums.reduce((min, current) => min < current ? min : current);
-
-  double calculateMax(List<double> sums) => sums.reduce((max, current) => max > current ? max : current);
-
-  double calculateAverage(List<double> sums) => sums.isEmpty ? 0.0 : sums.reduce((sum, current) => sum + current) / sums.length;
-
-  String formatValue(double value) => value >= 1000 ? '${(value / 1000).toStringAsFixed(2)}kW' : '${(value / 1000).toStringAsFixed(2)}kW';
+class MyHomePage extends StatelessWidget {
+  final ApiController apiController = Get.put(ApiController());
+  final TextEditingController startDateController = TextEditingController();
+  DateTime _selectedDate = DateTime.now();
 
   @override
   Widget build(BuildContext context) {
+    apiController.fetchFirstApiData(); // Fetch first API data when the widget is built
+
     return Scaffold(
+      backgroundColor: Colors.white,
+      drawer: Sidedrawer(context: context),
       appBar: AppBar(
-        title: Text('API Response'),
+        title: Center(
+          child: CustomText(
+            texts: 'daily analysis',
+            textColor: const Color(0xff002F46),
+          ),
+        ),
+        actions: const [
+          BoxwithIcon(),
+        ],
       ),
       body: SingleChildScrollView(
-        child: FutureBuilder(
-          future: fetchFirstApiData(),
-          builder: (context, firstApiSnapshot) {
-            if (firstApiSnapshot.connectionState == ConnectionState.waiting) {
-              return Center(child: CircularProgressIndicator());
-            } else if (firstApiSnapshot.hasError) {
-              return Center(child: Text('Error: ${firstApiSnapshot.error}'));
-            } else if (firstApiSnapshot.data == null) {
-              return Center(child: Text('No data available from the first API'));
-            } else {
-              Map<String, dynamic> firstApiResponse = firstApiSnapshot.data! as Map<String, dynamic>;
-
-              if (firstApiResponse.containsKey("Main")) {
-                return _buildUiForMain(firstApiResponse);
+        child: Column(
+          children: [
+            SizedBox(height: 20),
+            _buildDateSelectionField(context),
+            SizedBox(height: 20),
+            Obx(() {
+              if (apiController.firstApiResponse.value == null) {
+                return Center(child: CircularProgressIndicator());
+              } else if (apiController.firstApiResponse.value!.containsKey("Main")) {
+                return _buildUiForMain();
               } else {
-                List<String> modifiedKeys = firstApiResponse.keys.map((key) => '$key\_[kW]').toList();
+                List<String> modifiedKeys = apiController.firstApiResponse.value!.keys.map((key) => '$key\_[kW]').toList();
                 return _buildUiForOther(modifiedKeys);
               }
-            }
-          },
+            }),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildUiForMain(Map<String, dynamic> firstApiResponse) {
-    return FutureBuilder(
-      future: fetchSecondApiData(["Main_[kW]"]),
-      builder: (context, mainApiSnapshot) {
-        if (mainApiSnapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
-        } else if (mainApiSnapshot.hasError) {
-          return Center(child: Text('Error: ${mainApiSnapshot.error}'));
-        } else if (mainApiSnapshot.data == null) {
-          print('Main API data is null.');
-          return Center(child: Text('No data available for the Main_[kW] key'));
-        } else {
-          List<double> sumsList = [];
-          Map<String, dynamic> mainApiData = mainApiSnapshot.data! as Map<String, dynamic>;
+  Widget _buildDateSelectionField(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(0, 0, 10, 0),
+      padding: const EdgeInsets.fromLTRB(26, 4, 26, 0),
+      height: 40,
+      decoration: BoxDecoration(
+        color: const Color(0xffffffff),
+        borderRadius: BorderRadius.circular(60),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x26000000),
+            offset: Offset(0, 11),
+            blurRadius: 12,
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          TextButton(
+            onPressed: () {
+              _selectDate(context);
+            },
+            child: Text(
+              '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
+              style: TextStyle(fontSize: 16),
+            ),
+          ),
+          const SizedBox(width: 10),
+          IconButton(
+            icon: const Icon(
+              Icons.calendar_today,
+              size: 20,
+            ),
+            onPressed: () {
 
-          for (int i = 0; i < mainApiData["Main_[kW]"].length; i++) {
-            double sum = parseDouble(mainApiData["Main_[kW]"][i]);
-            sumsList.add(sum);
-          }
-
-          double totalSum = calculateTotalSum(sumsList);
-          double minSum = calculateMin(sumsList);
-          double maxSum = calculateMax(sumsList);
-          double avgSum = calculateAverage(sumsList);
-
-          return _buildSummaryUi(totalSum, minSum, maxSum, avgSum, sumsList);
-        }
-      },
+              _selectDate(context);
+            },
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildUiForOther(List<String> modifiedKeys) {
-    return FutureBuilder(
-      future: fetchSecondApiData(modifiedKeys),
-      builder: (context, secondApiSnapshot) {
-        if (secondApiSnapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
-        } else if (secondApiSnapshot.hasError) {
-          return Center(child: Text('Error: ${secondApiSnapshot.error}'));
-        } else if (secondApiSnapshot.data == null) {
-          print('Second API data is null.');
-          return Center(child: Text('No data available from the second API'));
-        } else {
-          List<double> sumsList = [];
-          Map<String, dynamic> filteredData = secondApiSnapshot.data! as Map<String, dynamic>;
-
-          for (int i = 0; i < filteredData['1st Floor_[kW]'].length; i++) {
-            double sum = parseDouble(filteredData['1st Floor_[kW]'][i]) + parseDouble(filteredData['Ground Floor_[kW]'][i]);
-            sumsList.add(sum);
-          }
-
-          double totalSum = calculateTotalSum(sumsList);
-          double minSum = calculateMin(sumsList);
-          double maxSum = calculateMax(sumsList);
-          double avgSum = calculateAverage(sumsList);
-
-          return _buildSummaryUi(totalSum, minSum, maxSum, avgSum, sumsList);
-        }
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+      builder: (BuildContext context, Widget? child) {
+        return Theme(
+          data: ThemeData.light(),
+          // You can customize the theme here
+          child: child!,
+        );
       },
     );
+    if (picked != null && picked != _selectedDate) {
+      _selectedDate = picked;
+      String formattedDate = '${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}';
+      apiController.fetchSecondApiData(formattedDate);
+    }
+  }
+
+  Widget _buildUiForMain() {
+    return Obx(() {
+      if (apiController.secondApiResponse.value == null) {
+        return Center(child: CircularProgressIndicator());
+      } else {
+        List<double> sumsList = [];
+        Map<String, dynamic> mainApiData = apiController.secondApiResponse.value!;
+
+        for (int i = 0; i < mainApiData["Main_[kW]"].length; i++) {
+          double sum = apiController.parseDouble(mainApiData["Main_[kW]"][i]);
+          sumsList.add(sum);
+        }
+
+        double totalSum = _calculateTotalSum(sumsList);
+        double minSum = _calculateMin(sumsList);
+        double maxSum = _calculateMax(sumsList);
+        double avgSum = _calculateAverage(sumsList);
+
+        return _buildSummaryUi(totalSum, minSum, maxSum, avgSum, sumsList);
+      }
+    });
+  }
+
+  Widget _buildUiForOther(List<String> modifiedKeys) {
+    return Obx(() {
+      if (apiController.secondApiResponse.value == null) {
+        return Center(child: CircularProgressIndicator());
+      } else {
+        List<double> sumsList = [];
+        Map<String, dynamic> filteredData = apiController.secondApiResponse.value!;
+
+        for (int i = 0; i < filteredData['1st Floor_[kW]'].length; i++) {
+          double sum = apiController.parseDouble(filteredData['1st Floor_[kW]'][i]) +
+              apiController.parseDouble(filteredData['Ground Floor_[kW]'][i]);
+          sumsList.add(sum);
+        }
+
+        double totalSum = _calculateTotalSum(sumsList);
+        double minSum = _calculateMin(sumsList);
+        double maxSum = _calculateMax(sumsList);
+        double avgSum = _calculateAverage(sumsList);
+
+        return _buildSummaryUi(totalSum, minSum, maxSum, avgSum, sumsList);
+      }
+    });
   }
 
   Widget _buildSummaryUi(double totalSum, double minSum, double maxSum, double avgSum, List<double> allValues) {
@@ -171,11 +232,12 @@ class _MyHomePageState extends State<MyHomePage> {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // _buildSummaryText('Total Power:', formatValue(totalSum)),
-          // _buildSummaryText('Min Power:', formatValue(minSum)),
-          // _buildSummaryText('Max Power:', formatValue(maxSum)),
-          // _buildSummaryText('Average Power:', formatValue(avgSum)),
-          _buildAllValuesText('All Values:', allValues),
+          _buildSummaryText('Total Power:', _formatValue(totalSum)),
+          _buildSummaryText('Min Power:', _formatValue(minSum)),
+          _buildSummaryText('Max Power:', _formatValue(maxSum)),
+          _buildSummaryText('Average Power:', _formatValue(avgSum)),
+        //  _buildAllValuesText('All Values:', allValues),
+          LineChart(allValues: allValues,),
         ],
       ),
     );
@@ -207,16 +269,466 @@ class _MyHomePageState extends State<MyHomePage> {
         Column(
           children: values.map((value) {
             return Text(
-              formatValue(value),
+              _formatValue(value),
               style: TextStyle(fontSize: 18),
             );
           }).toList(),
         ),
         Divider(),
+        //HeatmapChart()
       ],
     );
   }
+
+  double _calculateTotalSum(List<double> sums) => sums.reduce((total, current) => total + current);
+
+  double _calculateMin(List<double> sums) => sums.reduce((min, current) => min < current ? min : current);
+
+  double _calculateMax(List<double> sums) => sums.reduce((max, current) => max > current ? max : current);
+
+  double _calculateAverage(List<double> sums) => sums.isEmpty ? 0.0 : sums.reduce((sum, current) => sum + current) / sums.length;
+
+  String _formatValue(double value) => value >= 1000 ? '${(value / 1000).toStringAsFixed(2)}kW' : '${(value / 1000).toStringAsFixed(2)}kW';
 }
+
+
+
+
+
+
+
+
+
+
+
+// import 'dart:convert';
+//
+// import 'package:flutter/material.dart';
+// import 'package:http/http.dart' as http;
+//
+// class MyHomePage extends StatefulWidget {
+//   @override
+//   _MyHomePageState createState() => _MyHomePageState();
+// }
+//
+// class _MyHomePageState extends State<MyHomePage> {
+//   final String firstApiUrl = 'http://203.135.63.22:8000/buildingmap?username=ahmad';
+//   final String secondApiUrl = 'http://203.135.63.22:8000/data?username=ahmad&mode=hour&start=2024-02-11&end=2024-02-14';
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       backgroundColor: Colors.blueGrey,
+//       appBar: AppBar(
+//         title: Text('API Response'),
+//       ),
+//       body: SingleChildScrollView(
+//         child: FutureBuilder<Map<String, dynamic>>(
+//           future: fetchFirstApiData(),
+//           builder: (context, firstApiSnapshot) {
+//             if (firstApiSnapshot.connectionState == ConnectionState.waiting) {
+//               return Center(child: CircularProgressIndicator());
+//             } else if (firstApiSnapshot.hasError) {
+//               return Center(child: Text('Error: ${firstApiSnapshot.error}'));
+//             } else if (firstApiSnapshot.data == null) {
+//               return Center(child: Text('No data available from the first API'));
+//             } else {
+//               Map<String, dynamic> firstApiResponse = firstApiSnapshot.data!;
+//
+//               if (firstApiResponse.containsKey("Main")) {
+//                 return _buildUiForMain(firstApiResponse);
+//               } else {
+//                 List<String> modifiedKeys = firstApiResponse.keys.map((key) => '$key\_[kW]').toList();
+//                 return _buildUiForOther(modifiedKeys);
+//               }
+//             }
+//           },
+//         ),
+//       ),
+//     );
+//   }
+//
+//   Future<Map<String, dynamic>> fetchFirstApiData() async {
+//     final response = await http.get(Uri.parse(firstApiUrl));
+//
+//     if (response.statusCode == 200) {
+//       return json.decode(response.body);
+//     } else {
+//       throw Exception('Failed to load data from the first API');
+//     }
+//   }
+//
+//   Future<Map<String, dynamic>> fetchSecondApiData(List<String> keys) async {
+//     final response = await http.get(Uri.parse(secondApiUrl));
+//
+//     if (response.statusCode == 200) {
+//       Map<String, dynamic> secondApiResponse = json.decode(response.body);
+//       Map<String, dynamic> filteredData = {};
+//
+//       keys.forEach((key) {
+//         if (secondApiResponse['data'].containsKey(key)) {
+//           filteredData[key] = _parseDataList(secondApiResponse['data'][key]);
+//         }
+//       });
+//
+//       return filteredData;
+//     } else {
+//       throw Exception('Failed to load data from the second API');
+//     }
+//   }
+//
+//   List<double> _parseDataList(dynamic dataList) {
+//     if (dataList.isEmpty) {
+//       return List<double>.filled(24, 0.0);
+//     } else {
+//       return dataList.map<double>((value) {
+//         if (value == null || value == "NA") {
+//           return 0.0;
+//         }
+//         return double.tryParse(value.toString()) ?? 0.0;
+//       }).toList();
+//     }
+//   }
+//
+//   Widget _buildUiForMain(Map<String, dynamic> firstApiResponse) {
+//     return FutureBuilder<Map<String, dynamic>>(
+//       future: fetchSecondApiData(["Main_[kW]"]),
+//       builder: (context, mainApiSnapshot) {
+//         if (mainApiSnapshot.connectionState == ConnectionState.waiting) {
+//           return Center(child: CircularProgressIndicator());
+//         } else if (mainApiSnapshot.hasError) {
+//           return Center(child: Text('Error: ${mainApiSnapshot.error}'));
+//         } else if (mainApiSnapshot.data == null) {
+//           print('Main API data is null.');
+//           return Center(child: Text('No data available for the Main_[kW] key'));
+//         } else {
+//           List<double> sumsList = [];
+//           Map<String, dynamic> mainApiData = mainApiSnapshot.data!;
+//
+//           for (int i = 0; i < mainApiData["Main_[kW]"].length; i++) {
+//             double sum = _parseDouble(mainApiData["Main_[kW]"][i]);
+//             sumsList.add(sum);
+//           }
+//
+//
+//
+//           return _buildSummaryUi( sumsList);
+//         }
+//       },
+//     );
+//   }
+//
+//   Widget _buildUiForOther(List<String> modifiedKeys) {
+//     return FutureBuilder<Map<String, dynamic>>(
+//       future: fetchSecondApiData(modifiedKeys),
+//       builder: (context, secondApiSnapshot) {
+//         if (secondApiSnapshot.connectionState == ConnectionState.waiting) {
+//           return Center(child: CircularProgressIndicator());
+//         } else if (secondApiSnapshot.hasError) {
+//           return Center(child: Text('Error: ${secondApiSnapshot.error}'));
+//         } else if (secondApiSnapshot.data == null) {
+//           print('Second API data is null.');
+//           return Center(child: Text('No data available from the second API'));
+//         } else {
+//           List<double> sumsList = [];
+//           Map<String, dynamic> filteredData = secondApiSnapshot.data!;
+//
+//           for (int i = 0; i < filteredData['1st Floor_[kW]'].length; i++) {
+//             double sum = _parseDouble(filteredData['1st Floor_[kW]'][i]) + _parseDouble(filteredData['Ground Floor_[kW]'][i]);
+//             sumsList.add(sum);
+//           }
+//
+//
+//
+//           return _buildSummaryUi( sumsList);
+//         }
+//       },
+//     );
+//   }
+//
+//   double _parseDouble(dynamic value) {
+//     if (value == null || value == "NA") {
+//       return 0.0;
+//     }
+//     return double.tryParse(value.toString()) ?? 0.0;
+//   }
+//
+//   String _formatValue(double value) => value >= 1000 ? '${(value / 1000).toStringAsFixed(2)}kW' : '${(value / 1000).toStringAsFixed(2)}kW';
+//
+//   Widget _buildSummaryUi( List<double> allValues) {
+//     // Initialize a list to hold index values for each data point
+//     List<int> dataIndex = List.generate(allValues.length, (index) => index + 1);
+//
+//     // Build UI to display data for each index
+//     List<Widget> indexDataWidgets = List.generate(allValues.length, (index) {
+//       int dayIndex = dataIndex[index];
+//       String value = _formatValue(allValues[index]);
+//       return _buildSummaryText('Index $dayIndex:', value);
+//     });
+//
+//     return Center(
+//       child: Column(
+//         mainAxisAlignment: MainAxisAlignment.center,
+//         crossAxisAlignment: CrossAxisAlignment.center,
+//         children: [
+//           // Show data for each index
+//           Column(
+//             children: indexDataWidgets,
+//           ),
+//
+//         ],
+//       ),
+//     );
+//   }
+//
+//
+//
+//
+//   Widget _buildSummaryText(String title, String value) {
+//     return Column(
+//       children: [
+//         Text(
+//           title,
+//           style: TextStyle(fontWeight: FontWeight.bold),
+//         ),
+//         Text(
+//           'Value: $value',
+//           style: TextStyle(fontSize: 18),
+//         ),
+//         Divider(),
+//       ],
+//     );
+//   }
+// }
+
+
+
+
+
+//data for heatmap
+// import 'package:flutter/material.dart';
+// import 'dart:convert';
+// import 'package:http/http.dart' as http;
+// import 'package:shared_preferences/shared_preferences.dart';
+//
+// import 'heatsmap.dart';
+//
+// class MyHomePage extends StatefulWidget {
+//
+//   @override
+//   _MyHomePageState createState() => _MyHomePageState();
+// }
+//
+// class _MyHomePageState extends State<MyHomePage> {
+//   final String firstApiUrl = 'http://203.135.63.22:8000/buildingmap?username=ahmad';
+//   final String secondApiUrl = 'http://203.135.63.22:8000/data?username=ahmad&mode=hour&start=2024-02-11&end=2024-02-11';
+//
+//   Future<Map<String, dynamic>> fetchFirstApiData() async {
+//     final response = await http.get(Uri.parse(firstApiUrl));
+//
+//     if (response.statusCode == 200) {
+//       return json.decode(response.body);
+//     } else {
+//       throw Exception('Failed to load data from the first API');
+//     }
+//   }
+//
+//   Future<Map<String, dynamic>> fetchSecondApiData(List<String> keys) async {
+//     final response = await http.get(Uri.parse(secondApiUrl));
+//
+//     if (response.statusCode == 200) {
+//       Map<String, dynamic> secondApiResponse = json.decode(response.body);
+//       Map<String, dynamic> filteredData = {};
+//
+//       keys.forEach((key) {
+//         if (secondApiResponse['data'].containsKey(key)) {
+//           if (secondApiResponse['data'][key].isEmpty) {
+//             filteredData[key] = List<double>.filled(24, 0.0);
+//           } else {
+//             List<dynamic> dataList = secondApiResponse['data'][key];
+//             List<double> sanitizedDataList = dataList.map((value) {
+//               if (value == null || value == "NA") {
+//                 return 0.0;
+//               }
+//               return double.tryParse(value.toString()) ?? 0.0;
+//             }).toList();
+//
+//             filteredData[key] = sanitizedDataList;
+//           }
+//         }
+//       });
+//
+//       return filteredData;
+//     } else {
+//       throw Exception('Failed to load data from the second API');
+//     }
+//   }
+//
+//   double parseDouble(dynamic value) {
+//     if (value == null || value == "NA") {
+//       return 0.0;
+//     }
+//     return double.tryParse(value.toString()) ?? 0.0;
+//   }
+//
+//   double calculateTotalSum(List<double> sums) => sums.reduce((total, current) => total + current);
+//
+//   double calculateMin(List<double> sums) => sums.reduce((min, current) => min < current ? min : current);
+//
+//   double calculateMax(List<double> sums) => sums.reduce((max, current) => max > current ? max : current);
+//
+//   double calculateAverage(List<double> sums) => sums.isEmpty ? 0.0 : sums.reduce((sum, current) => sum + current) / sums.length;
+//
+//   String formatValue(double value) => value >= 1000 ? '${(value / 1000).toStringAsFixed(2)}kW' : '${(value / 1000).toStringAsFixed(2)}kW';
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//         backgroundColor: Colors.blueGrey,
+//       appBar: AppBar(
+//         title: Text('API Response'),
+//       ),
+//       body: SingleChildScrollView(
+//         child: FutureBuilder(
+//           future: fetchFirstApiData(),
+//           builder: (context, firstApiSnapshot) {
+//             if (firstApiSnapshot.connectionState == ConnectionState.waiting) {
+//               return Center(child: CircularProgressIndicator());
+//             } else if (firstApiSnapshot.hasError) {
+//               return Center(child: Text('Error: ${firstApiSnapshot.error}'));
+//             } else if (firstApiSnapshot.data == null) {
+//               return Center(child: Text('No data available from the first API'));
+//             } else {
+//               Map<String, dynamic> firstApiResponse = firstApiSnapshot.data! as Map<String, dynamic>;
+//
+//               if (firstApiResponse.containsKey("Main")) {
+//                 return _buildUiForMain(firstApiResponse);
+//               } else {
+//                 List<String> modifiedKeys = firstApiResponse.keys.map((key) => '$key\_[kW]').toList();
+//                 return _buildUiForOther(modifiedKeys);
+//               }
+//             }
+//           },
+//         ),
+//       ),
+//     );
+//   }
+//
+//   Widget _buildUiForMain(Map<String, dynamic> firstApiResponse) {
+//     return FutureBuilder(
+//       future: fetchSecondApiData(["Main_[kW]"]),
+//       builder: (context, mainApiSnapshot) {
+//         if (mainApiSnapshot.connectionState == ConnectionState.waiting) {
+//           return Center(child: CircularProgressIndicator());
+//         } else if (mainApiSnapshot.hasError) {
+//           return Center(child: Text('Error: ${mainApiSnapshot.error}'));
+//         } else if (mainApiSnapshot.data == null) {
+//           print('Main API data is null.');
+//           return Center(child: Text('No data available for the Main_[kW] key'));
+//         } else {
+//           List<double> sumsList = [];
+//           Map<String, dynamic> mainApiData = mainApiSnapshot.data! as Map<String, dynamic>;
+//
+//           for (int i = 0; i < mainApiData["Main_[kW]"].length; i++) {
+//             double sum = parseDouble(mainApiData["Main_[kW]"][i]);
+//             sumsList.add(sum);
+//           }
+//
+//           double totalSum = calculateTotalSum(sumsList);
+//           double minSum = calculateMin(sumsList);
+//           double maxSum = calculateMax(sumsList);
+//           double avgSum = calculateAverage(sumsList);
+//
+//           return _buildSummaryUi(totalSum, minSum, maxSum, avgSum, sumsList);
+//         }
+//       },
+//     );
+//   }
+//
+//   Widget _buildUiForOther(List<String> modifiedKeys) {
+//     return FutureBuilder(
+//       future: fetchSecondApiData(modifiedKeys),
+//       builder: (context, secondApiSnapshot) {
+//         if (secondApiSnapshot.connectionState == ConnectionState.waiting) {
+//           return Center(child: CircularProgressIndicator());
+//         } else if (secondApiSnapshot.hasError) {
+//           return Center(child: Text('Error: ${secondApiSnapshot.error}'));
+//         } else if (secondApiSnapshot.data == null) {
+//           print('Second API data is null.');
+//           return Center(child: Text('No data available from the second API'));
+//         } else {
+//           List<double> sumsList = [];
+//           Map<String, dynamic> filteredData = secondApiSnapshot.data! as Map<String, dynamic>;
+//
+//           for (int i = 0; i < filteredData['1st Floor_[kW]'].length; i++) {
+//             double sum = parseDouble(filteredData['1st Floor_[kW]'][i]) + parseDouble(filteredData['Ground Floor_[kW]'][i]);
+//             sumsList.add(sum);
+//           }
+//
+//           double totalSum = calculateTotalSum(sumsList);
+//           double minSum = calculateMin(sumsList);
+//           double maxSum = calculateMax(sumsList);
+//           double avgSum = calculateAverage(sumsList);
+//
+//           return _buildSummaryUi(totalSum, minSum, maxSum, avgSum, sumsList);
+//         }
+//       },
+//     );
+//   }
+//
+//   Widget _buildSummaryUi(double totalSum, double minSum, double maxSum, double avgSum, List<double> allValues) {
+//     return Center(
+//       child: Column(
+//         mainAxisAlignment: MainAxisAlignment.center,
+//         crossAxisAlignment: CrossAxisAlignment.center,
+//         children: [
+//           // _buildSummaryText('Total Power:', formatValue(totalSum)),
+//           // _buildSummaryText('Min Power:', formatValue(minSum)),
+//           // _buildSummaryText('Max Power:', formatValue(maxSum)),
+//           // _buildSummaryText('Average Power:', formatValue(avgSum)),
+//           _buildAllValuesText('All Values:', allValues),
+//         ],
+//       ),
+//     );
+//   }
+//
+//   Widget _buildSummaryText(String title, String value) {
+//     return Column(
+//       children: [
+//         Text(
+//           title,
+//           style: TextStyle(fontWeight: FontWeight.bold),
+//         ),
+//         Text(
+//           'Value: $value',
+//           style: TextStyle(fontSize: 18),
+//         ),
+//         Divider(),
+//       ],
+//     );
+//   }
+//
+//   Widget _buildAllValuesText(String title, List<double> values) {
+//     return Column(
+//       children: [
+//         Text(
+//           title,
+//           style: TextStyle(fontWeight: FontWeight.bold),
+//         ),
+//         Column(
+//           children: values.map((value) {
+//             return Text(
+//               formatValue(value),
+//               style: TextStyle(fontSize: 18),
+//             );
+//           }).toList(),
+//         ),
+//         Divider(),
+//         //HeatmapChart()
+//       ],
+//     );
+//   }
+// }
 
 
 // import 'package:flutter/material.dart';
