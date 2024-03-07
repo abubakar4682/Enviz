@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../screens/Historical.dart';
 
+import '../screens/Live.dart';
 import '../screens/dailyanalysi.dart';
 
 import '../screens/summary.dart';

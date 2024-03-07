@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import '../controller/Live/LiveController.dart';
 import '../controller/authcontroller/authcontroller.dart';
 import '../controller/datacontroller.dart';
 import '../highcharts/LiveChart.dart';
@@ -14,16 +15,17 @@ class Chart extends StatefulWidget {
 }
 
 class _ChartState extends State<Chart> {
-  final DataControllers controllerz = DataControllers();
+  final LiveDataControllers controllerz = LiveDataControllers();
 
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
-      future: controllerz.livedata(),
+      future: controllerz.fetchDataforlive(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.done) {
           // If the asynchronous operation is complete, show the Livechart
-          return Livechart(controllers: controllerz);
+          return Text('hello');
+          // return Livechart(controllers: controllerz);
         } else {
           // If the asynchronous operation is still ongoing, show a loading indicator
           return Scaffold(

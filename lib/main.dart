@@ -43,15 +43,20 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:highcharts_demo/screens/Historical.dart';
+import 'package:highcharts_demo/screens/Live.dart';
 import 'package:highcharts_demo/screens/dailyanalysi.dart';
 
 import 'package:highcharts_demo/screens/splashe_screen.dart';
+import 'package:highcharts_demo/sevenday.dart';
 import 'package:highcharts_demo/test.dart';
 import 'package:highcharts_demo/today.dart';
 
 import 'heatmap.dart';
+import 'heatmapwithweb.dart';
 import 'heatsmap.dart';
 import 'highcharts/area_chart.dart';
+import 'lastmainKW.dart';
+import 'lastvalues.dart';
 
 void main() {
   runApp(MyApp());
