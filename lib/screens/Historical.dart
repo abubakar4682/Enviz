@@ -9,6 +9,9 @@ import 'package:high_chart/high_chart.dart';
 
 import '../controller/historical/historicalcontroller.dart';
 
+import '../heatmap.dart';
+import '../itemapp.dart';
+import '../today.dart';
 import '../widgets/BoxwithIcon.dart';
 import '../widgets/CustomText.dart';
 
@@ -73,7 +76,7 @@ class _HistoricalState extends State<Historical> {
             textColor: const Color(0xff002F46),
           ),
         ),
-        actions: [
+        actions: const [
           BoxwithIcon(),
         ],
       ),
@@ -106,13 +109,13 @@ class _HistoricalState extends State<Historical> {
                   Expanded(
                     flex: 1,
                     child: Container(
-                      margin:  EdgeInsets.fromLTRB(0, 0, 10, 0),
-                      padding:  EdgeInsets.fromLTRB(26, 4, 26, 0),
+                      margin:  const EdgeInsets.fromLTRB(0, 0, 10, 0),
+                      padding:  const EdgeInsets.fromLTRB(26, 4, 26, 0),
                       height:  40,
                       decoration:  BoxDecoration (
-                        color:  Color(0xffffffff),
+                        color:  const Color(0xffffffff),
                         borderRadius:  BorderRadius.circular(60),
-                        boxShadow:  [
+                        boxShadow:  const [
                           BoxShadow(
                             color:  Color(0x26000000),
                             offset:  Offset(0, 11),
@@ -123,7 +126,7 @@ class _HistoricalState extends State<Historical> {
                       child: Row(
                         children: [
                           Obx(
-                                () => Text('${controller.startDate.value}')
+                                () => Text(controller.startDate.value)
                           ),
                           IconButton(
                             icon: Icon(Icons.arrow_drop_down,size: 30,),
@@ -223,6 +226,17 @@ class _HistoricalState extends State<Historical> {
                   );
                 }
               }),),
+            SizedBox(
+              height: 20,
+            ),
+            // LineChartScreen(),
+            SizedBox(
+              height: 20,
+            ),
+            LineChartScreentwo()
+
+            //LineChartScreenexample(),
+            // PolygonCustomPage(),
 
           ],
         ),
@@ -514,6 +528,7 @@ class _HistoricalState extends State<Historical> {
                               color: Colors.white,
                             ),
                           ),
+
                         ],
                       ),
                     ),

@@ -1,3 +1,100 @@
+import 'package:flutter/material.dart';
+import 'dart:async';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+
+
+
+class DataDisplayScreendsd extends StatefulWidget {
+  @override
+  _DataDisplayScreendsdState createState() => _DataDisplayScreendsdState();
+}
+
+class _DataDisplayScreendsdState extends State<DataDisplayScreendsd> {
+  late Future<Map<String, List<String>>> futureDataOrganized;
+
+  Future<Map<String, List<String>>> fetchData() async {
+    String startDate = "2023-12-07";
+    String endDate = "2023-12-10";
+    final String url = 'http://203.135.63.22:8000/data?username=ppjiq&mode=hour&start=$startDate&end=$endDate';
+    try {
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200) {
+        var data = jsonDecode(response.body);
+        return _organizeData(data);
+      } else {
+        throw Exception('Failed to load data');
+      }
+    } catch (e) {
+      throw Exception('Failed to fetch data: $e');
+    }
+  }
+
+  Map<String, List<String>> _organizeData(Map<String, dynamic> rawData) {
+    Map<String, List<String>> organizedData = {};
+    List<dynamic> dateTimeData = rawData['data']['Date & Time'];
+    List<dynamic> kwData = rawData['data']['Main_[kW]'];
+
+    for (int i = 0; i < dateTimeData.length; i++) {
+      String date = dateTimeData[i].split(' ')[0]; // Extract date part
+      String kwValue = kwData[i] == "NA" || kwData[i] == null ? "0" : kwData[i].toString();
+
+      organizedData.putIfAbsent(date, () => []);
+      organizedData[date]!.add(kwValue);
+    }
+
+    return organizedData;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    futureDataOrganized = fetchData();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Main_[kW] Data Display'),
+      ),
+      body: FutureBuilder<Map<String, List<String>>>(
+        future: futureDataOrganized,
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            var dates = snapshot.data!.keys.toList();
+            return ListView.builder(
+              itemCount: dates.length,
+              itemBuilder: (context, index) {
+                String date = dates[index];
+                List<String> kwValues = snapshot.data![date]!;
+                return ExpansionTile(
+                  title: Text(date),
+                  children: kwValues.asMap().entries.map((entry) {
+                    int idx = entry.key;
+                    String kwValue = entry.value;
+                    return ListTile(
+                      title: Text("Value $idx"),
+                      subtitle: Text("Main_[kW]: $kwValue"),
+                    );
+                  }).toList(),
+                );
+              },
+            );
+          } else if (snapshot.hasError) {
+            return Text("${snapshot.error}");
+          }
+          // By default, show a loading spinner.
+          return CircularProgressIndicator();
+        },
+      ),
+    );
+  }
+}
+
+
+
+
 // // import 'package:flutter/cupertino.dart';
 // // import 'package:flutter/material.dart';
 // // import 'package:high_chart/high_chart.dart';

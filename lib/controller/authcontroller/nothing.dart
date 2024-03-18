@@ -36,7 +36,6 @@ class DataController extends GetxController {
 
   Map<String, dynamic> processData(Map<String, dynamic> data) {
     Map<String, dynamic> filteredData = {};
-
     data.forEach((key, value) {
       if (value is List) {
         List<double> sanitizedDataList = value

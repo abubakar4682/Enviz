@@ -105,6 +105,7 @@ class _SummaryState extends State<Summary> {
       body: SingleChildScrollView(
         child: Column(
           children: [
+
             SwitchWidget(
               selectedIndex: selectedIndex,
               onToggle: (index) {

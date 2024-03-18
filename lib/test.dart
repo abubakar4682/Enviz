@@ -28,7 +28,7 @@ class ApiController extends GetxController {
 
   void fetchSecondApiData(String date) async {
     secondApiUrl =
-    'http://203.135.63.22:8000/data?username=ppjiq&mode=hour&start=$date&end=$date';
+    'http://203.135.63.22:8000/data?username=ppjiq&mode=hour&start=2023-12-01&end=2023-12-09';
     final response = await http.get(Uri.parse(secondApiUrl));
     print(secondApiUrl);
 

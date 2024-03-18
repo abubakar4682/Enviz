@@ -52,7 +52,7 @@ class _DataDisplayScreenState extends State<DataDisplayScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-           //   StockColumns(controllers: _dataController),
+              //   StockColumns(controllers: _dataController),
               ListTile(
                 title: Text('Date: $date'),
               ),
@@ -76,7 +76,7 @@ class _DataDisplayScreenState extends State<DataDisplayScreen> {
 
 
 class Controllers extends GetxController {
- // RxList<Map<String, dynamic>> kwData = <Map<String, dynamic>>[].obs;
+  // RxList<Map<String, dynamic>> kwData = <Map<String, dynamic>>[].obs;
   RxDouble lastMainKWValue = 0.0.obs;
   RxBool loading = false.obs;
 
@@ -168,8 +168,3 @@ class Controllers extends GetxController {
     }
   }
 }
-
-
-
-
-

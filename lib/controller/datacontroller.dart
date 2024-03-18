@@ -35,6 +35,8 @@ class DataControllers extends GetxController {
   RxString endDate = '2024-01-07'.obs;
  RxList<String> result = <String>['0', '0', '0'].obs; // Initialize with zeroes
   Future<void> fetchData() async {
+    DateTime startDate = DateTime.now().subtract(Duration(days: 7));
+    DateTime endDate = DateTime.now();
     final username = usernamenameController.text.toString();
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? storedUsername = prefs.getString('username');
@@ -149,6 +151,8 @@ class DataControllers extends GetxController {
       print('An unexpected error occurred: $error');
     }
   }
+
+
   void userRegister() {
     loading.value = true;
     final username = usernamenameController.text.toString();
@@ -425,8 +429,6 @@ class DataControllers extends GetxController {
 
 
 
-
-
   void handleSuccessfulRegistration(Map<String, dynamic> value) async {
     Get.snackbar('Login Successfully', '',
       backgroundColor: Colors.blueGrey, colorText: Colors.white,
@@ -434,24 +436,56 @@ class DataControllers extends GetxController {
     );
     String token = value['token'];
     String displayName = value['client']['displayName'];
+    String email = value['client']['email']; // Extract email from response
     String username = usernamenameController.text.toString(); // Get username from controller
 
+    // Debug print
     print({
       'username': username,
-      'password': password,
+      'password': passwordController.text, // Assuming you have this variable for password
       'token': token,
       'displayName': displayName,
+      'email': email, // Include email in debug print
     });
 
-    // Save username to local storage
+    // Save username, displayName, and email to local storage
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setString('username', username);
+    prefs.setString('displayName', displayName); // Save displayName
+    prefs.setString('email', email); // Save email
 
     fetchData();
-    //fetchDataforlive();
+    // fetchDataforlive();
 
     Get.to(() => BottomPage());
   }
+
+
+  // void handleSuccessfulRegistration(Map<String, dynamic> value) async {
+  //   Get.snackbar('Login Successfully', '',
+  //     backgroundColor: Colors.blueGrey, colorText: Colors.white,
+  //     snackPosition: SnackPosition.TOP,
+  //   );
+  //   String token = value['token'];
+  //   String displayName = value['client']['displayName'];
+  //   String username = usernamenameController.text.toString(); // Get username from controller
+  //
+  //   print({
+  //     'username': username,
+  //     'password': password,
+  //     'token': token,
+  //     'displayName': displayName,
+  //   });
+  //
+  //   // Save username to local storage
+  //   SharedPreferences prefs = await SharedPreferences.getInstance();
+  //   prefs.setString('username', username);
+  //
+  //   fetchData();
+  //   //fetchDataforlive();
+  //
+  //   Get.to(() => BottomPage());
+  // }
 
 
   void handleRegistrationError(String errorMessage) {
