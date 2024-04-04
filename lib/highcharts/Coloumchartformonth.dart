@@ -1,43 +1,60 @@
-import 'package:flutter/cupertino.dart';
+
 import 'package:flutter/material.dart';
+
 import 'package:high_chart/high_chart.dart';
+
 import '../controller/datacontroller.dart';
-class WeekChart extends StatelessWidget {
-  final DataControllers controllers;
-  WeekChart({Key? key, required this.controllers}) : super(key: key);
+import '../controller/summaryedController.dart';
+
+class StockColumnformonth extends StatelessWidget {
+  final SummaryysControllers controllers;
+
+  StockColumnformonth({Key? key, required this.controllers}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 2),
       child: HighCharts(
-        loader:Text('Loading...'),
+        loader: Center(
+          child: const SizedBox(
+            child: Text('loading'),
+            width: 2,
+          ),
+        ),
         size: const Size(400, 400),
         data: _getChartData(),
         scripts: const ["https://code.highcharts.com/highcharts.js"],
       ),
     );
   }
+
   String _getChartData() {
-    // Extracting data from the DataControllers
-    Map<String, Map<String, double>> dailyItemSumsMap = controllers.dailyItemSumsMap;
-    // Generating dynamic chart data based on fetched data
+    // Extract the data from the DataControllers
+    Map<String, Map<String, double>> dailyItemSumsMap =
+        controllers.dailyItemSumsMapforMonth;
+
+    // Generate dynamic chart data based on the fetched data
     List<List<dynamic>> seriesData = [];
     Map<String, int> colorMap = {};
+
     dailyItemSumsMap.forEach((date, itemSums) {
       String formattedDate = date;
       itemSums.forEach((itemName, sum) {
         if (!colorMap.containsKey(itemName)) {
           colorMap[itemName] = colorMap.length;
         }
-        // Adjusting date to Pakistani time zone
+
+        // Adjust the date to the Pakistani time zone
         DateTime dateTime = DateTime.parse(date);
         DateTime pakistaniDateTime = dateTime.toUtc().add(Duration(hours: 5));
-        // Converting sum to kilowatts
+
+        // Convert sum to kilowatts
         double sumInKW = sum / 1000;
 
         seriesData.add([
-          _getEpochMillis(pakistaniDateTime), // Using adjusted time
-          sumInKW, // Using converted value in kilowatts
+          _getEpochMillis(pakistaniDateTime), // Use the adjusted time
+          sumInKW, // Use the converted value in kilowatts
           colorMap[itemName], // Color index for each item
         ]);
       });
@@ -45,65 +62,64 @@ class WeekChart extends StatelessWidget {
 
     String seriesConfig = '';
     colorMap.forEach((itemName, colorIndex) {
-      // Removing underscores from the item name
+      // Remove underscores from the item name
       String cleanItemName = itemName.replaceAll('_', ' ');
-
-      // Setting visibility to false for "Main" and "Generator" by default
       bool isVisible = itemName != 'Main_' && itemName != 'Generator_';
 
       seriesConfig += '''
-  {
-    type: 'column',
-    name: '$cleanItemName', // Using cleaned item name
-    data: ${seriesData.where((data) => data[2] == colorIndex).map((data) => [
+    {
+      type: 'column',
+      name: '$cleanItemName', // Use the cleaned item name
+      data: ${seriesData.where((data) => data[2] == colorIndex).map((data) => [
         data[0],
         data[1],
       ]).toList()},
-    color: Highcharts.getOptions().colors[$colorIndex],
-    pointWidth: 25,
-    borderRadius: 5,
-    visible: $isVisible, // Setting visibility
-  },
-''';
+      color: Highcharts.getOptions().colors[$colorIndex],
+      pointWidth: 10,
+      borderRadius: 5,
+          visible: $isVisible, 
+    },
+  ''';
     });
 
     return '''
-{
-  accessibility: {
-    enabled: false
-  },
-  chart: {
-    alignTicks: false
-  },
-  title: {
-    text: 'Daily Breakdown'
-  },
-  xAxis: {
-    type: 'datetime',
-    dateTimeLabelFormats: {
-      day: '%e %b',
+  {
+    accessibility: {
+      enabled: false
     },
-  },
-  
-  yAxis: {
-    allowDecimals: false,
+    chart: {
+      alignTicks: false
+    },
     title: {
-      text: 'Energy (kWh)',
+      text: 'Monthly Breakdown'
     },
-  },
-
-  plotOptions: {
-    column: {
-      stacking: 'normal',
-      tooltip: {
-        pointFormat: '<span style="color:{point.color}">\u25CF</span> {series.name}: <b>{point.y:.2f} kWh</b><br/>'
+    
+    xAxis: {
+      type: 'datetime',
+      dateTimeLabelFormats: {
+        day: '%e %b',
+      },
+    },
+    yAxis: {
+      allowDecimals: false,
+      title: {
+        text: 'Energy (kWh)',
+      },
+    },
+    plotOptions: {
+      column: {
+        stacking: 'normal',
+        tooltip: {
+          pointFormat: '<span style="color:{point.color}">\u25CF</span> {series.name}: <b>{point.y:.2f} kWh</b><br/>'
+        }
       }
-    }
-  },
-  series: [$seriesConfig], // Configuring series data
-}
+    },
+    series: [$seriesConfig],
+  }
 ''';
   }
+
+
 
   void _onColumnClick(Map<String, dynamic> event) {
     // Handle the click event, you can access the clicked data using event['point']
@@ -118,3 +134,5 @@ class WeekChart extends StatelessWidget {
     return dateTime.millisecondsSinceEpoch;
   }
 }
+
+

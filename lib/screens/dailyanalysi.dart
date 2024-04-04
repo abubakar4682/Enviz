@@ -19,23 +19,25 @@ class Dailyanalusic extends StatefulWidget {
 class _DailyanalusicState extends State<Dailyanalusic> {
   final DailyAnalysisController apiController = Get.put(DailyAnalysisController());
   DateTime _selectedDate = DateTime.now();
+
 @override
   void initState() {
   apiController.fetchFirstApiData();
+
     // TODO: implement initState
     super.initState();
   }
   @override
   Widget build(BuildContext context) {
-    DateTime _selectedDate = DateTime.now();
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+
       home: Scaffold(
         drawer: Sidedrawer(context: context),
         appBar: AppBar(
           title: Center(
             child: CustomText(
-              texts: 'daily analysis',
+              texts: 'Daily Analysis',
               textColor: const Color(0xff002F46),
             ),
           ),
@@ -50,7 +52,7 @@ class _DailyanalusicState extends State<Dailyanalusic> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 CustomText(
-                  texts: 'select Dates',
+                  texts: 'Select Date',
                   textColor: const Color(0xff002F46),
                 ),
                 const SizedBox(
@@ -173,7 +175,7 @@ class _DailyanalusicState extends State<Dailyanalusic> {
       //     ],
       //   ),
       // ),
-                SizedBox(
+                const SizedBox(
                   height: 25,
                 ),
 
@@ -240,15 +242,15 @@ class _DailyanalusicState extends State<Dailyanalusic> {
                 }),
 
                 SizedBox(height: 24),
-                FilledRedButton(
-                  onPressed: () {},
-                  text: 'download',
-                ),
+                // FilledRedButton(
+                //   onPressed: () {},
+                //   text: 'download',
+                // ),
                 SizedBox(height: 24),
-                const Text(
-                  'Multiple PDFs will be downloaded showcasing analytics.',
-                  style: TextStyle(fontSize: 10),
-                ),
+                // const Text(
+                //   'Multiple PDFs will be downloaded showcasing analytics.',
+                //   style: TextStyle(fontSize: 10),
+                // ),
               ],
             ),
           ),
@@ -306,6 +308,7 @@ class _DailyanalusicState extends State<Dailyanalusic> {
     });
   }
   Widget _buildSummaryUi(double totalSum, double minSum, double maxSum, double avgSum, List<double> allValues) {
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -366,70 +369,8 @@ class _DailyanalusicState extends State<Dailyanalusic> {
       ),
     );
   }
-  Widget _buildDateSelectionField(BuildContext context, String labelText, TextEditingController controller) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 20),
-      child: TextField(
-        readOnly: true,
-        controller: controller,
-        decoration: InputDecoration(
-          labelText: labelText,
-          suffixIcon: IconButton(
-            icon: Icon(Icons.calendar_today),
-            onPressed: () async {
-              DateTime? pickedDate = await showDatePicker(
-                context: context,
-                initialDate: DateTime.now(),
-                firstDate: DateTime(2000),
-                lastDate: DateTime(2101),
-              );
-              if (pickedDate != null) {
-                controller.text = pickedDate.toString().substring(0, 10);
-                apiController.fetchSecondApiData(controller.text as List<String>);
-              }
-            },
-          ),
-        ),
-      ),
-    );
-  }
-  Widget _buildSummaryText(String title, String value) {
-    return Column(
-      children: [
-        Text(
-          title,
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        Text(
-          'Value: $value',
-          style: TextStyle(fontSize: 18),
-        ),
-        Divider(),
-      ],
-    );
-  }
 
 
-  Widget _buildAllValuesText(String title, List<double> values) {
-    return Column(
-      children: [
-        Text(
-          title,
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        Column(
-          children: values.map((value) {
-            return Text(
-              _formatValue(value),
-              style: TextStyle(fontSize: 18),
-            );
-          }).toList(),
-        ),
-        Divider(),
-        //HeatmapChart()
-      ],
-    );
-  }
 
   double _calculateTotalSum(List<double> sums) =>
       sums.reduce((total, current) => total + current);

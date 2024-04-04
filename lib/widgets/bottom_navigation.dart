@@ -7,6 +7,7 @@ import '../screens/dailyanalysi.dart';
 
 import '../screens/summary.dart';
 
+import '../summmer.dart';
 import '../today.dart';
 
 class BottomPage extends StatefulWidget {
@@ -19,7 +20,7 @@ class BottomPage extends StatefulWidget {
 class _BottomPageState extends State<BottomPage> {
   int currentIndex = 0;
   List<Widget> pages = [
-    const Summary(),
+     Summary(),
     const LiveDataScreen(),
     const Historical(),
     Dailyanalusic(),

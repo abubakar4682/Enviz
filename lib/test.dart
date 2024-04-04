@@ -237,7 +237,7 @@ class MyHomePage extends StatelessWidget {
           _buildSummaryText('Max Power:', _formatValue(maxSum)),
           _buildSummaryText('Average Power:', _formatValue(avgSum)),
         //  _buildAllValuesText('All Values:', allValues),
-          LineChart(allValues: allValues,),
+          //LineChart(allValues: allValues,),
         ],
       ),
     );

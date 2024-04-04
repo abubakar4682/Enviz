@@ -74,7 +74,10 @@ class _LiveDataScreenState extends State<LiveDataScreen> {
                   SizedBox(
                     height: 40,
                   ),
-                  StockPieWidget(data: newData,),
+                  SizedBox(
+                      height: 700,
+                      width: 700,
+                      child: StockPieWidget(data: newData,)),
                 ],
               );
             },
@@ -93,9 +96,8 @@ class StockColumnWidget extends StatelessWidget {
     final String chartData = _generateChartData(data);
 
     return HighCharts(
-      loader: const SizedBox(
-        child: CircularProgressIndicator(),
-        width: 200,
+      loader: Center(
+        child: Text('Loading...'),
       ),
       size: const Size(400, 400),
       data: chartData,
@@ -172,20 +174,16 @@ class StockPieWidget extends StatelessWidget {
     final String chartData = _generateChartData(data);
 
     return HighCharts(
-      loader: const SizedBox(
-
-        child: CircularProgressIndicator(
-          strokeWidth: 2,
-        ),
-        width: 2,
-        height: 5,
-
+      loader: Center(
+        child: Text('Loading...'),
       ),
       size: const Size(600, 600), // Increase the size of the pie chart
       data: chartData,
       scripts: const ["https://code.highcharts.com/highcharts.js"],
     );
   }
+
+
   String _generateChartData(List<Map<String, dynamic>> data) {
     if (data.isEmpty) {
       return ''; // Handle empty data case
@@ -197,17 +195,30 @@ class StockPieWidget extends StatelessWidget {
     // Calculate the total sum of all values excluding "Main"
     double totalSum = filteredData.fold(0, (sum, item) => sum + (item['lastIndexValue'] ?? 0.0));
 
-    // Calculate the percentage for each value excluding "Main"
+    // Helper function to format numbers into "kW" notation
+    String formatNumber(double value) {
+      // Convert to kW first
+      double valueInKW = value / 1000;
+      if (valueInKW >= 1) {
+        // If value is 1kW or more, format with "k" and add "kW"
+        return '${valueInKW.toStringAsFixed(3)} kW';
+      } else {
+        // If less than 1kW, just show in kW without "k"
+        return '${valueInKW.toStringAsFixed(3)} kW';
+      }
+    }
+
+    // Calculate the percentage for each value excluding "Main" and format values
     List<Map<String, dynamic>> seriesData = filteredData.map((itemData) {
       String prefixName = itemData['prefixName'];
       double lastIndexValue = itemData['lastIndexValue'] ?? 0.0; // Provide a default value
-
-      // Calculate the percentage and round it to two decimal places
       double percentage = ((lastIndexValue / totalSum) * 100.0).roundToDouble();
 
       return {
         'name': prefixName,
         'y': percentage,
+        // Adding formatted value for display in tooltip
+        'formattedValue': formatNumber(lastIndexValue),
       };
     }).toList();
 
@@ -217,13 +228,15 @@ class StockPieWidget extends StatelessWidget {
 {
   chart: {
     type: 'pie',
+     size: '75%',
   },
   title: {
     text: 'Appliance Share',
   },
   tooltip: {
       valueSuffix: '%',
-      pointFormat: 'Power: {point.y}'
+      // Modify to show formatted value with "kW"
+      pointFormat: 'Power: <b>{point.formattedValue}</b>'
   },
   plotOptions: {
     pie: {
@@ -231,7 +244,7 @@ class StockPieWidget extends StatelessWidget {
       cursor: 'pointer',
       dataLabels: {
         enabled: true,
-        format: '<b>{point.name}</b>', // Only show item name
+        format: '<b>{point.name}</b>: {point.y}%', // Show item name and percentage
       },
     },
   },
@@ -242,6 +255,7 @@ class StockPieWidget extends StatelessWidget {
 }
 ''';
   }
+
 
 }
 

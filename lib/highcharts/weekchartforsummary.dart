@@ -2,9 +2,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:high_chart/high_chart.dart';
 import '../controller/datacontroller.dart';
-class WeekChart extends StatelessWidget {
-  final DataControllers controllers;
-  WeekChart({Key? key, required this.controllers}) : super(key: key);
+import '../controller/summaryedController.dart';
+class WeekChartforsummary extends StatelessWidget {
+  final SummaryysControllers controllers;
+  WeekChartforsummary({Key? key, required this.controllers}) : super(key: key);
   @override
   Widget build(BuildContext context) {
     return Padding(

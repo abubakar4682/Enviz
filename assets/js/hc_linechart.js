@@ -1,18 +1,36 @@
+function jsHeatmapFunc(chartData, startDate, endDate) {
+  // Function to generate array of dates between two dates
+  function getDatesBetween(startDate, endDate) {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const dates = [];
 
-function jsHeatmapFunc(chartData) {
-  // Customization for heatmap appearance
+    while (start <= end) {
+      dates.push(new Date(start).toISOString().split('T')[0]);
+      start.setDate(start.getDate() + 1);
+    }
+
+    // Format dates for display, e.g., 'Mon 01', 'Tue 02', ...
+    return dates.map(date => {
+      const d = new Date(date);
+      return d.toLocaleDateString('en-US', { weekday: 'short', day: '2-digit' });
+    });
+  }
+
+  const dateCategories = getDatesBetween(startDate, endDate);
+
   Highcharts.chart('highChartsDiv', {
     chart: {
       type: 'heatmap',
       marginTop: 100,
-      marginBottom:100,
+      marginBottom: 100,
       plotBorderWidth: 10
     },
     title: {
-      text: 'Weekly Pattern'
+      text: 'Energy Consumption Pattern'
     },
     xAxis: {
-      categories: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+      categories: dateCategories,
     },
     yAxis: {
       categories: ['12 AM', '1 AM', '2 AM', '3 AM', '4 AM', '5 AM', '6 AM', '7 AM', '8 AM', '9 AM', '10 AM', '11 AM', '12 PM', '1 PM', '2 PM', '3 PM', '4 PM', '5 PM', '6 PM', '7 PM', '8 PM', '9 PM', '10 PM', '11 PM'],
@@ -21,19 +39,22 @@ function jsHeatmapFunc(chartData) {
     },
     colorAxis: {
       min: 0,
-      minColor: '#8B4513', // Dark brown color
-      maxColor: '#8B4513', // Dark brown color (same as minColor)
+      minColor: '#8B4513',
+      maxColor: '#F4A460',
       stops: [
-        [0, '#8B4513'],  // Dark brown color
-        [0.5, '#CD853F'], // Medium brown color
-        [1, '#F4A460'] // Light brown color
+        [0, '#8B4513'],
+        [0.5, '#CD853F'],
+        [1, '#F4A460']
       ]
     },
-       tooltip: {
-            format: '<b>{series.xAxis.categories.(point.x)}</b> <br>' +
-                '<b>{point.value}</b>  <br>' +
-                '<b>{series.yAxis.categories.(point.y)}</b>'
-        },
+    tooltip: {
+      formatter: function () {
+        var energyValue = (this.point.value / 1000).toFixed(2);
+        return '<b>' + this.series.xAxis.categories[this.point.x] + '</b><br><b>' +
+          this.series.yAxis.categories[this.point.y] + '</b><br><b>' +
+          'Energy: ' + energyValue + ' kWh</b>';
+      }
+    },
     legend: {
       align: 'right',
       layout: 'vertical',
@@ -43,15 +64,78 @@ function jsHeatmapFunc(chartData) {
       symbolHeight: 280
     },
     series: [{
-      name: 'Hourly Heatmap',
+      name: 'Hourly Energy Consumption',
       borderWidth: 1,
       data: chartData,
       dataLabels: {
-        enabled: false // Disable data labels
+        enabled: false
       }
     }]
   });
 }
+
+
+
+
+//function jsHeatmapFunc(chartData) {
+//  Highcharts.chart('highChartsDiv', {
+//    chart: {
+//      type: 'heatmap',
+//      marginTop: 100,
+//      marginBottom: 100,
+//      plotBorderWidth: 10
+//    },
+//    title: {
+//      text: 'Weekly Pattern'
+//    },
+//    xAxis: {
+//      categories: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+//    },
+//    yAxis: {
+//      categories: ['12 AM', '1 AM', '2 AM', '3 AM', '4 AM', '5 AM', '6 AM', '7 AM', '8 AM', '9 AM', '10 AM', '11 AM', '12 PM', '1 PM', '2 PM', '3 PM', '4 PM', '5 PM', '6 PM', '7 PM', '8 PM', '9 PM', '10 PM', '11 PM'],
+//      title: null,
+//      reversed: true
+//    },
+//    colorAxis: {
+//      min: 0,
+//      minColor: '#8B4513',
+//      maxColor: '#F4A460',
+//      stops: [
+//        [0, '#8B4513'],  // Dark brown color
+//        [0.5, '#CD853F'], // Medium brown color
+//        [1, '#F4A460']    // Light brown color
+//      ]
+//    },
+//tooltip: {
+//  formatter: function () {
+//    // Convert the value to kilowatts and fix to 2 decimal places
+//    var energyValue = (this.point.value / 1000).toFixed(2);
+//    return '<b>' + this.series.xAxis.categories[this.point.x] + '</b><br><b>' +
+//      this.series.yAxis.categories[this.point.y] + '</b><br><b>' +
+//      'Energy: ' + energyValue + ' kWh</b>';
+//  }
+//},
+//
+//
+//    legend: {
+//      align: 'right',
+//      layout: 'vertical',
+//      margin: 0,
+//      verticalAlign: 'top',
+//      y: 25,
+//      symbolHeight: 280
+//    },
+//    series: [{
+//      name: 'Hourly Heatmap',
+//      borderWidth: 1,
+//      data: chartData,
+//      dataLabels: {
+//        enabled: false
+//      }
+//    }]
+//  });
+//}
+
 
 
 //

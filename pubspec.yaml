@@ -86,6 +86,8 @@ flutter:
     - assets/js/hc_index.html
     - assets/js/highcharts.js
     - assets/js/hc_linechart.js
+    - assets/js/org_chart_index.html
+    - assets/js/org_chart.js
 
 
 

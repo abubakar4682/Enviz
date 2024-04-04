@@ -37,7 +37,7 @@ class SwitchWidget extends StatelessWidget {
               activeFgColor: Colors.white,
               inactiveBgColor: Colors.white,
               inactiveFgColor: Colors.grey[900],
-              labels: ['Today', 'Last Month'],
+              labels: ['Today', 'This Month'],
               onToggle: onToggle,
             ),
             SizedBox(height: 10),

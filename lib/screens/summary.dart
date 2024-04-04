@@ -30,7 +30,10 @@ class _SummaryState extends State<Summary> {
 
   @override
   void initState() {
+    summaryController. fetchFirstApiData();
+    summaryController.fetchSecondApiData();
     _fetchDataTimer = Timer.periodic(Duration(minutes: 1), (timer) {
+
       print('Timer callback abubakar');
       _fetchAllData();
     });
@@ -51,6 +54,8 @@ class _SummaryState extends State<Summary> {
 
       await summaryController.fetchData(); // Fetch 7-day data
 
+      await summaryController. fetchFirstApiData();
+      await   summaryController.fetchSecondApiData();
       if (selectedIndex == 1) {
         // Fetch month data only if the selected index is 1
         await summaryController.fetchDataformonth();
@@ -118,10 +123,12 @@ class _SummaryState extends State<Summary> {
               visible: selectedIndex == 0,
               child: Column(
                 children: [
+
                   Padding(
                     padding: const EdgeInsets.only(left: 10, right: 10),
                     child: Row(
                       children: [
+
                         Expanded(
                           flex: 1,
                           child: Container(
@@ -147,26 +154,52 @@ class _SummaryState extends State<Summary> {
                                         texts: 'cost of usage',
                                         textColor: Color(0xff009f8d),
                                       ),
-                                      SizedBox(
-                                        width: 20,
-                                        height: 20,
-                                        child: Image.asset(
-                                            'assets/images/Vector.png'),
+                                      Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: SizedBox(
+                                          width: 20,
+                                          height: 20,
+                                          child: Image.asset(
+                                              'assets/images/moneylogo.png'),
+                                        ),
                                       ),
                                     ],
                                   ),
                                   Obx(() {
-                                    print(summaryController.lastMainKWValue);
-                                    return Text(
-                                      'Rs. ${(summaryController.lastMainKWValue * 70 / 1000).toStringAsFixed(2)}',
-                                      style: const TextStyle(
-                                        fontSize: 24,
-                                        fontWeight: FontWeight.w700,
-                                        height: 1.5,
-                                        color: Colors.white,
-                                      ),
-                                    );
+                                    final firstApiData = summaryController.firstApiData!.value;
+                                    if (firstApiData == null || firstApiData.isEmpty) {
+                                      return CircularProgressIndicator();
+                                    }else {
+                                      if (firstApiData.containsKey("Main")) {
+                                        return _buildUiForMainForPrice(firstApiData);
+                                      } else {
+                                        List<String> modifiedKeys =
+                                        firstApiData.keys.map((key) => '$key\_[kW]').toList();
+                                        return _buildUiForOtherForPrice(modifiedKeys);
+                                      }
+                                    }
+                                    // return Text(
+                                    //   '${(summaryController.lastMainKWValue / 1000).toStringAsFixed(2)} KW',
+                                    //   style: const TextStyle(
+                                    //     fontSize: 24,
+                                    //     fontWeight: FontWeight.w700,
+                                    //     height: 1.5,
+                                    //     color: Colors.white,
+                                    //   ),
+                                    // );
                                   }),
+                                  // Obx(() {
+                                  //   print(summaryController.lastMainKWValue);
+                                  //   return Text(
+                                  //     'Rs. ${(summaryController.lastMainKWValue * 70 / 1000).toStringAsFixed(2)}',
+                                  //     style: const TextStyle(
+                                  //       fontSize: 24,
+                                  //       fontWeight: FontWeight.w700,
+                                  //       height: 1.5,
+                                  //       color: Colors.white,
+                                  //     ),
+                                  //   );
+                                  // }),
                                   CustomText(
                                     texts: 'per hour',
                                     textColor: Color(0xb2ffffff),
@@ -204,24 +237,39 @@ class _SummaryState extends State<Summary> {
                                         texts: 'power',
                                         textColor: Color(0xff009f8d),
                                       ),
-                                      SizedBox(
-                                        width: 20,
-                                        height: 20,
-                                        child: Image.asset(
-                                            'assets/images/Vector.png'),
+                                      Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: SizedBox(
+                                          width: 20,
+                                          height: 20,
+                                          child: Image.asset(
+                                              'assets/images/Vector.png'),
+                                        ),
                                       ),
                                     ],
                                   ),
                                   Obx(() {
-                                    return Text(
-                                      '${(summaryController.lastMainKWValue / 1000).toStringAsFixed(2)} KW',
-                                      style: const TextStyle(
-                                        fontSize: 24,
-                                        fontWeight: FontWeight.w700,
-                                        height: 1.5,
-                                        color: Colors.white,
-                                      ),
-                                    );
+                                    final firstApiData = summaryController.firstApiData!.value;
+                                    if (firstApiData == null || firstApiData.isEmpty) {
+                                      return CircularProgressIndicator();
+                                    }else {
+                                      if (firstApiData.containsKey("Main")) {
+                                        return _buildUiForMain(firstApiData);
+                                      } else {
+                                        List<String> modifiedKeys =
+                                        firstApiData.keys.map((key) => '$key\_[kW]').toList();
+                                        return _buildUiForOther(modifiedKeys);
+                                      }
+                                    }
+                                    // return Text(
+                                    //   '${(summaryController.lastMainKWValue / 1000).toStringAsFixed(2)} KW',
+                                    //   style: const TextStyle(
+                                    //     fontSize: 24,
+                                    //     fontWeight: FontWeight.w700,
+                                    //     height: 1.5,
+                                    //     color: Colors.white,
+                                    //   ),
+                                    // );
                                   }),
                                   CustomText(
                                     texts:
@@ -270,5 +318,110 @@ class _SummaryState extends State<Summary> {
         ),
       ),
     );
+  }
+  Widget _buildUiForMain(Map<String, dynamic> firstApiResponse) {
+    return Obx(() {
+      final secondApiData = summaryController.secondApiData!.value;
+      if (secondApiData == null || secondApiData.isEmpty) {
+        return CircularProgressIndicator();
+      } else {
+        List<double> sumsList = [];
+        for (int i = 0; i < secondApiData["Main_[kW]"].length; i++) {
+          double sum = summaryController.parseDouble(secondApiData["Main_[kW]"][i]);
+          sumsList.add(sum);
+        }
+
+
+        double lastindexvalue = summaryController.getLastIndexValue(sumsList);
+
+        return Text("${summaryController.formatValued(lastindexvalue)}kW", style: const TextStyle(
+          fontSize: 24,
+          fontWeight: FontWeight.w700,
+          height: 1.5,
+          color: Colors.white,
+        ),);
+      }
+    });
+  }
+  Widget _buildUiForMainForPrice(Map<String, dynamic> firstApiResponse) {
+    return Obx(() {
+      final secondApiData = summaryController.secondApiData!.value;
+      if (secondApiData == null || secondApiData.isEmpty) {
+        return CircularProgressIndicator();
+      } else {
+        List<double> sumsList = [];
+        for (int i = 0; i < secondApiData["Main_[kW]"].length; i++) {
+          double sum = summaryController.parseDouble(secondApiData["Main_[kW]"][i]);
+          sumsList.add(sum);
+        }
+
+
+        double lastindexvalue = summaryController.getLastIndexValue(sumsList);
+
+        return Text("Rs ${summaryController.formatValued(lastindexvalue*70)}", style: const TextStyle(
+          fontSize: 24,
+          fontWeight: FontWeight.w700,
+          height: 1.5,
+          color: Colors.white,
+        ),);
+      }
+    });
+  }
+
+  Widget _buildUiForOther(List<String> modifiedKeys) {
+    return Obx(() {
+      final secondApiData = summaryController.secondApiData!.value;
+      if (secondApiData == null || secondApiData.isEmpty) {
+        return CircularProgressIndicator();
+      } else {
+        List<double> sumsList = [];
+        for (int i = 0; i < secondApiData['1st Floor_[kW]'].length; i++) {
+          double sum =
+              summaryController.parseDouble(secondApiData['1st Floor_[kW]'][i]) +
+                  summaryController.parseDouble(secondApiData['Ground Floor_[kW]'][i]);
+          sumsList.add(sum);
+        }
+
+
+        double lastindexvalue = summaryController.getLastIndexValue(sumsList);
+
+        (summaryController.lastMainKWValue * 70 / 1000).toStringAsFixed(2);
+
+        return Text("${summaryController.formatValued(lastindexvalue)}kW", style: const TextStyle(
+          fontSize: 24,
+          fontWeight: FontWeight.w700,
+          height: 1.5,
+          color: Colors.white,
+        ),);
+      }
+    });
+  }
+  Widget _buildUiForOtherForPrice(List<String> modifiedKeys) {
+    return Obx(() {
+      final secondApiData = summaryController.secondApiData!.value;
+      if (secondApiData == null || secondApiData.isEmpty) {
+        return CircularProgressIndicator();
+      } else {
+        List<double> sumsList = [];
+        for (int i = 0; i < secondApiData['1st Floor_[kW]'].length; i++) {
+          double sum =
+              summaryController.parseDouble(secondApiData['1st Floor_[kW]'][i]) +
+                  summaryController.parseDouble(secondApiData['Ground Floor_[kW]'][i]);
+          sumsList.add(sum);
+        }
+
+
+        double lastindexvalue = summaryController.getLastIndexValue(sumsList);
+
+        (summaryController.lastMainKWValue * 70 / 1000).toStringAsFixed(2);
+
+        return Text("Rs. ${summaryController.formatValued(lastindexvalue*70)}", style: const TextStyle(
+          fontSize: 24,
+          fontWeight: FontWeight.w700,
+          height: 1.5,
+          color: Colors.white,
+        ),);
+      }
+    });
   }
 }

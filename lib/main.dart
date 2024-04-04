@@ -43,17 +43,18 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:highcharts_demo/screens/Historical.dart';
+import 'package:highcharts_demo/screens/login.dart';
 
 
 import 'package:highcharts_demo/screens/splashe_screen.dart';
 import 'package:highcharts_demo/sevenday.dart';
+import 'package:highcharts_demo/summmer.dart';
 import 'package:highcharts_demo/test.dart';
 import 'package:highcharts_demo/today.dart';
 
 import 'controller/ThemeController.dart';
-import 'hcheatmap.dart';
-import 'heatsmap.dart';
-import 'itemapp.dart';
+import 'highchartcoulm.dart';
+
 
 
 void main() {
@@ -69,9 +70,9 @@ class MyApp extends StatelessWidget {
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
-      theme: ThemeData.light(), // Define your light theme
-      darkTheme: ThemeData.dark(), // Define your dark theme
-      themeMode: ThemeMode.system,
+      theme: ThemeData.light(), // Sets the light theme.
+      // Removed darkTheme since it's not needed if you're always using light theme
+      themeMode: ThemeMode.light,
       home: SplashScreen(),
 
       // },

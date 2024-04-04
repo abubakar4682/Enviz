@@ -18,7 +18,6 @@ import '../widgets/CustomText.dart';
 import '../widgets/SideDrawer.dart';
 import '../widgets/StartingndEnding.dart';
 
-
 class Historical extends StatefulWidget {
   const Historical({Key? key}) : super(key: key);
 
@@ -40,18 +39,39 @@ class _HistoricalState extends State<Historical> {
       // value.toStringAsFixed(2);
     }
   }
-  late Timer _fetchDataTimer;
 
+  late Timer _fetchDataTimer;
 
   @override
   void initState() {
     super.initState();
+    controller.fetchFirstApiData();
+    controller.fetchSecondApiData();
+    controller.checkDataAvailability();
+    _fetchAllData();
+    controller.kwData.clear();
 
+     controller.fetchData(); // Fetch 7-day data
+
+    controller.update();
+
+    // Initialize _fetchDataTimer with a periodic Timer
+    _fetchDataTimer = Timer.periodic(Duration(minutes: 1), (Timer t) {
+      _fetchAllData();
+      // controller.kwData.clear();
+    });
   }
+  Future<void> _fetchAllData() async {
+    try {
+    //  controller.kwData.clear(); // Clear existing data
 
-
+    } catch (error) {
+      print('Error fetching data: $error');
+    }
+  }
   @override
   void dispose() {
+    controller.kwData.clear();
     // Cancel the timer when the widget is disposed
     _fetchDataTimer.cancel();
     super.dispose();
@@ -89,87 +109,89 @@ class _HistoricalState extends State<Historical> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   CustomText(
-                    texts: 'start date',
+                    texts: 'Start date',
                     textColor: Color(0xff002F46),
                   ),
                   CustomText(
-                    texts: 'end date',
+                    texts: 'End date',
                     textColor: Color(0xff002F46),
                   ),
                 ],
               ),
             ),
-           //  SelectStartndEndingDate(controller: controller, context: context),
+            //  SelectStartndEndingDate(controller: controller, context: context),
             Padding(
-              padding:  const EdgeInsets.only(left: 10, right: 10,top: 10),
+              padding: const EdgeInsets.only(left: 10, right: 10, top: 10),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-
                   Expanded(
                     flex: 1,
                     child: Container(
-                      margin:  const EdgeInsets.fromLTRB(0, 0, 10, 0),
-                      padding:  const EdgeInsets.fromLTRB(26, 4, 26, 0),
-                      height:  40,
-                      decoration:  BoxDecoration (
-                        color:  const Color(0xffffffff),
-                        borderRadius:  BorderRadius.circular(60),
-                        boxShadow:  const [
+                      margin: const EdgeInsets.fromLTRB(0, 0, 10, 0),
+                      padding: const EdgeInsets.fromLTRB(26, 4, 26, 0),
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: const Color(0xffffffff),
+                        borderRadius: BorderRadius.circular(60),
+                        boxShadow: const [
                           BoxShadow(
-                            color:  Color(0x26000000),
-                            offset:  Offset(0, 11),
-                            blurRadius:  12,
+                            color: Color(0x26000000),
+                            offset: Offset(0, 11),
+                            blurRadius: 12,
                           ),
                         ],
                       ),
                       child: Row(
                         children: [
-                          Obx(
-                                () => Text(controller.startDate.value)
-                          ),
+                          Obx(() => Text(controller.startDate.value)),
                           IconButton(
-                            icon: Icon(Icons.arrow_drop_down,size: 30,),
-                            onPressed: () { controller.selectStartDate(context);
-                        //    controller.fetchData();
-                              },
+                            icon: Icon(
+                              Icons.arrow_drop_down,
+                              size: 30,
+                            ),
+                            onPressed: () {
+                              controller.selectStartDate(context);
+                              //    controller.fetchData();
+                            },
                           ),
                         ],
                       ),
                     ),
                   ),
                   SizedBox(height: 40),
-
-
-
                   Expanded(
                     flex: 1,
                     child: Container(
-                      margin:  EdgeInsets.fromLTRB(0, 0, 10, 0),
-                      padding:  EdgeInsets.fromLTRB(26, 4, 26, 0),
-                      height:  40,
-                      decoration:  BoxDecoration (
-                        color:  Color(0xffffffff),
-                        borderRadius:  BorderRadius.circular(60),
-                        boxShadow:  [
+                      margin: EdgeInsets.fromLTRB(0, 0, 10, 0),
+                      padding: EdgeInsets.fromLTRB(26, 4, 26, 0),
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: Color(0xffffffff),
+                        borderRadius: BorderRadius.circular(60),
+                        boxShadow: [
                           BoxShadow(
-                            color:  Color(0x26000000),
-                            offset:  Offset(0, 11),
-                            blurRadius:  12,
+                            color: Color(0x26000000),
+                            offset: Offset(0, 11),
+                            blurRadius: 12,
                           ),
                         ],
                       ),
                       child: Row(
                         children: [
                           Obx(
-                                () => Text(' ${controller.endDate.value}'),
+                            () => Text(' ${controller.endDate.value}'),
                           ),
                           //Text('${controller.endDate}'),
                           IconButton(
-                            icon: Icon(Icons.arrow_drop_down,size: 30,),
-                            onPressed: () { controller.selectEndDate(context);
-                          //  controller.fetchData();
-                              },
+                            icon: Icon(
+                              Icons.arrow_drop_down,
+                              size: 30,
+                            ),
+                            onPressed: () {
+                              controller.selectEndDate(context);
+                              //  controller.fetchData();
+                            },
                           ),
                         ],
                       ),
@@ -178,6 +200,7 @@ class _HistoricalState extends State<Historical> {
                 ],
               ),
             ),
+
             SizedBox(
               height: 30,
             ),
@@ -189,60 +212,61 @@ class _HistoricalState extends State<Historical> {
                 if (firstApiData.containsKey("Main")) {
                   return _buildUiForMain(firstApiData);
                 } else {
-                  List<String> modifiedKeys = firstApiData.keys
-                      .map((key) => '$key\_[kW]')
-                      .toList();
+                  List<String> modifiedKeys =
+                      firstApiData.keys.map((key) => '$key\_[kW]').toList();
                   return _buildUiForOther(modifiedKeys);
                 }
               }
             }),
 
-
             SizedBox(
               height: 20,
             ),
             Container(
-              height: 500,
-              child:    Obx(() {
+              height: 450,
+              child: Obx(() {
                 if (controller.kwData.isEmpty) {
                   return Center(
                     child: CircularProgressIndicator(),
                   );
                 } else {
                   return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 2),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 0, vertical: 2),
                     child: HighCharts(
-                      loader: const SizedBox(
-                        height: 20,
-                        width: 15,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                        ),
+                      loader: Center(
+                        child: Text('Loading...'),
                       ),
                       size: const Size(400, 400),
-                      data: _getChartData(controller.kwData, ),
-                      scripts: const ["https://code.highcharts.com/highcharts.js"],
+                      data: _getChartData(
+                        controller.kwData,
+                      ),
+                      scripts: const [
+                        "https://code.highcharts.com/highcharts.js"
+                      ],
                     ),
                   );
                 }
-              }),),
+              }),
+            ),
             SizedBox(
               height: 20,
             ),
             // LineChartScreen(),
-            SizedBox(
-              height: 20,
-            ),
-            LineChartScreentwo()
+
+            Padding(
+              padding: const EdgeInsets.only(left: 10),
+              child: LineChartScreentwo(),
+            )
 
             //LineChartScreenexample(),
             // PolygonCustomPage(),
-
           ],
         ),
       ),
     );
   }
+
   Widget _buildUiForMain(Map<String, dynamic> firstApiResponse) {
     return Obx(() {
       final secondApiData = controller.secondApiData!.value;
@@ -264,6 +288,7 @@ class _HistoricalState extends State<Historical> {
       }
     });
   }
+
   Widget _buildSummaryUi(double totalSum, double minSum, double maxSum, double avgSum) {
     return Center(
       child: Column(
@@ -300,13 +325,13 @@ class _HistoricalState extends State<Historical> {
                               SizedBox(
                                 width: 20,
                                 height: 20,
-                                child: Image.asset(
-                                    'assets/images/moneylogo.png'),
+                                child:
+                                    Image.asset('assets/images/moneylogo.png'),
                               ),
                             ],
                           ),
                           Text(
-                            'Rs.${controller.formatValued(totalSum*70)}',
+                            'Rs.${controller.formatValued(totalSum * 70)}',
                             style: const TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.w700,
@@ -356,8 +381,6 @@ class _HistoricalState extends State<Historical> {
                           SizedBox(
                             height: 10,
                           ),
-
-
                           Text(
                             controller.formatValue(totalSum),
                             style: const TextStyle(
@@ -408,8 +431,7 @@ class _HistoricalState extends State<Historical> {
                               SizedBox(
                                 width: 20,
                                 height: 20,
-                                child: Image.asset(
-                                    'assets/images/Minus.png'),
+                                child: Image.asset('assets/images/Minus.png'),
                               ),
                             ],
                           ),
@@ -456,20 +478,17 @@ class _HistoricalState extends State<Historical> {
                               SizedBox(
                                 width: 20,
                                 height: 20,
-                                child: Image.asset(
-                                    'assets/images/Plus.png'),
+                                child: Image.asset('assets/images/Plus.png'),
                               ),
                             ],
                           ),
                           SizedBox(
                             height: 10,
                           ),
-
-
                           Text(
                             controller.formatValue(maxSum),
                             style: const TextStyle(
-                              fontSize: 28,
+                              fontSize: 24,
                               fontWeight: FontWeight.w700,
                               height: 1.5,
                               color: Colors.white,
@@ -517,8 +536,6 @@ class _HistoricalState extends State<Historical> {
                           SizedBox(
                             height: 10,
                           ),
-
-
                           Text(
                             controller.formatValue(avgSum),
                             style: const TextStyle(
@@ -528,7 +545,6 @@ class _HistoricalState extends State<Historical> {
                               color: Colors.white,
                             ),
                           ),
-
                         ],
                       ),
                     ),
@@ -536,30 +552,13 @@ class _HistoricalState extends State<Historical> {
                 ),
               ],
             ),
-
           ),
-
-
         ],
       ),
     );
   }
 
-  Widget _buildSummaryText(String title, String value) {
-    return Column(
-      children: [
-        Text(
-          title,
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        Text(
-          ' $value',
-          style: TextStyle(fontSize: 18),
-        ),
-        Divider(),
-      ],
-    );
-  }
+
   Widget buildBox(String label, String value, String photoPath) {
     // Parse the value as double
     //double parsedValue = double.parse(value);
@@ -582,12 +581,10 @@ class _HistoricalState extends State<Historical> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label,
-                  style: TextStyle(
-                      color: Color(0xff009f8d)
-                  ),
+                Text(
+                  label,
+                  style: TextStyle(color: Color(0xff009f8d)),
                 ),
-
                 SizedBox(
                   width: 20,
                   height: 20,
@@ -597,7 +594,7 @@ class _HistoricalState extends State<Historical> {
             ),
             Text(
               // Format the value using the formatToKilo function
-            value,
+              value,
               style: const TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.w700,
@@ -610,6 +607,7 @@ class _HistoricalState extends State<Historical> {
       ),
     );
   }
+
   Widget _buildUiForOther(List<String> modifiedKeys) {
     return Obx(() {
       final secondApiData = controller.secondApiData!.value;
@@ -618,8 +616,9 @@ class _HistoricalState extends State<Historical> {
       } else {
         List<double> sumsList = [];
         for (int i = 0; i < secondApiData['1st Floor_[kW]'].length; i++) {
-          double sum = controller.parseDouble(secondApiData['1st Floor_[kW]'][i]) +
-              controller.parseDouble(secondApiData['Ground Floor_[kW]'][i]);
+          double sum =
+              controller.parseDouble(secondApiData['1st Floor_[kW]'][i]) +
+                  controller.parseDouble(secondApiData['Ground Floor_[kW]'][i]);
           sumsList.add(sum);
         }
 
@@ -632,12 +631,14 @@ class _HistoricalState extends State<Historical> {
       }
     });
   }
+
   String _getChartData(List<Map<String, dynamic>> kwData) {
     List<Map<String, dynamic>> seriesData = [];
     List<String> legendNames = [];
 
     kwData.forEach((item) {
-      String prefixName = item['prefixName'].replaceAll('_', ''); // Remove underscores
+      String prefixName =
+          item['prefixName'].replaceAll('_', ''); // Remove underscores
       if (prefixName == 'Main') {
         prefixName = 'Usage'; // Rename "Main" to "Usage"
       }
@@ -672,7 +673,8 @@ class _HistoricalState extends State<Historical> {
       seriesData.add({
         'name': prefixName,
         'data': dataForSeries,
-        'visible': prefixName == 'Usage', // Set visibility flag to true for "Usage" and false for others
+        'visible': prefixName == 'Usage',
+        // Set visibility flag to true for "Usage" and false for others
       });
     });
 
@@ -727,104 +729,7 @@ class _HistoricalState extends State<Historical> {
 ''';
   }
 
-//   String _getChartData(List<Map<String, dynamic>> kwData) {
-//     List<Map<String, dynamic>> seriesData = [];
-//     List<String> legendNames = [];
-//
-//     kwData.forEach((item) {
-//       String prefixName = item['prefixName'].replaceAll('_', ''); // Remove underscores
-//       List<double> values = item['values'];
-//       legendNames.add(prefixName); // Add key name to legends
-//       List<List<dynamic>> dataForSeries = [];
-//
-//       // Assuming values are for each hour
-//       DateTime startDate = DateTime.parse(controller.startDate.value);
-//       DateTime endDate = DateTime.parse(controller.endDate.value);
-//
-//       // Determine the number of hours between start and end dates
-//       int numberOfHours = endDate.difference(startDate).inHours;
-//
-//       for (int i = 0; i <= numberOfHours; i++) {
-//         // Adjusting date to Pakistani time zone
-//         DateTime dateTime = startDate.add(Duration(hours: i));
-//         DateTime pakistaniDateTime = dateTime.toUtc().add(Duration(hours: 5));
-//
-//         // Check if the date is within the range of start and end date
-//         if (dateTime.isAfter(startDate) && dateTime.isBefore(endDate)) {
-//           // Make sure the index 'i' is within the bounds of 'values'
-//           if (i < values.length) {
-//             dataForSeries.add([
-//               _getEpochMillis(pakistaniDateTime),
-//               values[i],
-//             ]);
-//           }
-//         }
-//       }
-//
-//       seriesData.add({
-//         'name': prefixName,
-//         'data': dataForSeries,
-//       });
-//     });
-//
-//     List<String> seriesConfigList = [];
-//     seriesData.forEach((series) {
-//       String seriesName = series['name'];
-//       List<List<dynamic>> seriesData = series['data'];
-//
-//       seriesConfigList.add('''
-// {
-//   type: 'area',
-//   name: '$seriesName',
-//   data: ${jsonEncode(seriesData)},
-// }
-// ''');
-//     });
-//
-//     String seriesConfig = seriesConfigList.join(',');
-//
-//     return '''
-// {
-//   accessibility: {
-//     enabled: false
-//   },
-//   chart: {
-//     alignTicks: false
-//   },
-//   title: {
-//     text: 'Weekly Data Display'
-//   },
-//   xAxis: {
-//     type: 'datetime',
-//     dateTimeLabelFormats: {
-//       day: '%e %b',
-//     },
-//   },
-//   yAxis: {
-//     title: {
-//       text: 'Energy (kW)',
-//     },
-//   },
-//   legend: {
-//     enabled: true,
-//   },
-//   tooltip: {
-//     pointFormat: '<span style="color:{point.color}">\u25CF</span> {series.name}: <b>{point.y:.2f} kW</b><br/>'
-//   },
-//   series: [$seriesConfig],
-// }
-// ''';
-//   }
-
-
-
-
-
-
-
   int _getEpochMillis(DateTime dateTime) {
     return dateTime.millisecondsSinceEpoch;
   }
 }
-
-

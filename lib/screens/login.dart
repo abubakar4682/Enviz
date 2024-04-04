@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../Theme/theme.dart';
 import '../Utils/colors.dart';
 import '../controller/datacontroller.dart';
+import '../controller/summaryedController.dart';
 import '../widgets/Cutom_button.dart';
 
 class Login extends StatefulWidget {
@@ -14,6 +15,8 @@ class Login extends StatefulWidget {
 
 class _LoginState extends State<Login> {
   final authController = Get.put(DataControllers());
+ // final summaryController = Get.put(SummaryysControllers());
+
 
   @override
   Widget build(BuildContext context) {
@@ -81,6 +84,7 @@ class _LoginState extends State<Login> {
                     : FilledRedButton(
                   onPressed: () {
                     authController.userRegister();
+                  //  summaryController.fetchData();
                   },
                   text: 'Login',
                 );
@@ -128,13 +132,15 @@ class _LoginState extends State<Login> {
   }
 }
 
+
+
 class PasswordTextField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final authController = Get.find<DataControllers>();
-    return TextField(
-      onChanged: (value) =>
-      authController.passwordController.text = value,
+
+    return Obx(() => TextField(
+      onChanged: (value) => authController.passwordController.text = value,
       obscureText: !authController.showPassword.value,
       decoration: InputDecoration(
         labelText: 'Password',
@@ -151,6 +157,6 @@ class PasswordTextField extends StatelessWidget {
           borderRadius: BorderRadius.circular(10.0),
         ),
       ),
-    );
+    ));
   }
 }
