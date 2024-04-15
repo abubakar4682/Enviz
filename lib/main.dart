@@ -53,6 +53,7 @@ import 'package:highcharts_demo/test.dart';
 import 'package:highcharts_demo/today.dart';
 
 import 'controller/ThemeController.dart';
+import 'heatsmap.dart';
 import 'highchartcoulm.dart';
 
 
@@ -73,7 +74,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData.light(), // Sets the light theme.
       // Removed darkTheme since it's not needed if you're always using light theme
       themeMode: ThemeMode.light,
-      home: SplashScreen(),
+      home:    SplashScreen(),
 
       // },
     );

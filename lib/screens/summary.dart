@@ -289,7 +289,10 @@ class _SummaryState extends State<Summary> {
 
                       child: WeekChart(
                         controllers: summaryController,
-                      )),
+                      )
+
+
+                  ),
                   // LiveChart(myController: summaryController,),
                   const SizedBox(
                     height: 50,

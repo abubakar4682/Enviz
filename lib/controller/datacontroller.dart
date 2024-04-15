@@ -175,7 +175,7 @@ class DataControllers extends GetxController {
         try {
           // Make an HTTP GET request
           final String apiUrl =
-              "http://203.135.63.22:8000/data?username=$storedUsername&mode=hour&start=$formattedDate&end=$formattedDate";
+              "http://203.135.63.47:8000/data?username=$storedUsername&mode=hour&start=$formattedDate&end=$formattedDate";
           final response = await http.get(
             Uri.parse(apiUrl),
           );

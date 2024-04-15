@@ -169,7 +169,7 @@ class _HistoricalState extends State<Historical> {
                       decoration: BoxDecoration(
                         color: Color(0xffffffff),
                         borderRadius: BorderRadius.circular(60),
-                        boxShadow: [
+                        boxShadow: const [
                           BoxShadow(
                             color: Color(0x26000000),
                             offset: Offset(0, 11),
@@ -184,7 +184,7 @@ class _HistoricalState extends State<Historical> {
                           ),
                           //Text('${controller.endDate}'),
                           IconButton(
-                            icon: Icon(
+                            icon: const Icon(
                               Icons.arrow_drop_down,
                               size: 30,
                             ),
@@ -201,7 +201,7 @@ class _HistoricalState extends State<Historical> {
               ),
             ),
 
-            SizedBox(
+            const SizedBox(
               height: 30,
             ),
             Obx(() {
@@ -331,7 +331,7 @@ class _HistoricalState extends State<Historical> {
                             ],
                           ),
                           Text(
-                            'Rs.${controller.formatValued(totalSum * 70)}',
+                            'Rs ${controller.formatValued(totalSum * 70)}',
                             style: const TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.w700,

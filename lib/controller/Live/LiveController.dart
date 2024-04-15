@@ -55,7 +55,7 @@ class LiveDataControllers extends GetxController {
 
       try {
         final String apiUrl =
-            "http://203.135.63.22:8000/data?username=$storedUsername&mode=hour&start=$formattedStartDate&end=$formattedEndDate";
+            "http://203.135.63.47:8000/data?username=$storedUsername&mode=hour&start=$formattedStartDate&end=$formattedEndDate";
         final response = await http.get(Uri.parse(apiUrl));
         print(apiUrl);
 

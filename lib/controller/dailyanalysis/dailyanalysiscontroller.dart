@@ -28,7 +28,7 @@ class DailyAnalysisController extends GetxController {
   void fetchSecondApiData(List<String> keys) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? storedUsername = prefs.getString('username');
-    final response = await http.get(Uri.parse('http://203.135.63.22:8000/data?username=$storedUsername&mode=hour&start=${endDate.value}&end=${endDate.value}'));
+    final response = await http.get(Uri.parse('http://203.135.63.47:8000/data?username=$storedUsername&mode=hour&start=${endDate.value}&end=${endDate.value}'));
     if (response.statusCode == 200) {
       Map<String, dynamic> secondApiResponseData = json.decode(response.body);
       Map<String, dynamic> filteredData = {};
@@ -63,7 +63,7 @@ class DailyAnalysisController extends GetxController {
   void fetchFirstApiData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? storedUsername = prefs.getString('username');
-    final response = await http.get(Uri.parse('http://203.135.63.22:8000/buildingmap?username=$storedUsername'));
+    final response = await http.get(Uri.parse('http://203.135.63.47:8000/buildingmap?username=$storedUsername'));
 
 
     if (response.statusCode == 200) {

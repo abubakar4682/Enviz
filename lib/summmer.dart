@@ -5,19 +5,21 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:highcharts_demo/pichart.dart';
+import 'package:highcharts_demo/screens/Summary/this_month.dart';
+import 'package:highcharts_demo/screens/Summary/this_week.dart';
 import 'package:highcharts_demo/widgets/CustomText.dart';
 import 'package:highcharts_demo/widgets/SideDrawer.dart';
 import 'package:highcharts_demo/widgets/switch_button.dart';
 import 'package:intl/intl.dart';
 
+import 'controller/Summary_Controller/max_avg_min_controller.dart';
 import 'controller/datacontroller.dart';
 import 'controller/summaryedController.dart';
+import 'highchartcoulm.dart';
 import 'highcharts/Coloumchartformonth.dart';
 import 'highcharts/WeekChart.dart';
 import 'highcharts/piechartformonth.dart';
-import 'highcharts/piechartforweek.dart';
-import 'highcharts/stock_column.dart';
-import 'highcharts/weekchartforsummary.dart';
+
 
 class Summayed extends StatefulWidget {
 
@@ -35,11 +37,10 @@ class _SummayedState extends State<Summayed> {
   void initState() {
     summaryController. fetchFirstApiData();
     summaryController.fetchSecondApiData();
-    summaryController.fetchData();
-    summaryController.fetchDataformonth();
+
 
     super.initState();
-    //  _fetchAllData();
+
   }
   @override
   void dispose() {
@@ -228,36 +229,11 @@ class _SummayedState extends State<Summayed> {
                   height: 40,
                 ),
                 Container(
-                  height: 400,
-                  child: Obx(() {
-                    if (summaryController.loading.isTrue) {
-                      // Show loading indicator
-                      return Center(child: CircularProgressIndicator());
-                    } else {
-                      // Data has been loaded, show WeekChart
-                      return WeekChartforsummary(
-                        controllers: summaryController,
-                      );
-                    }
-                  }),
+                  height: MediaQuery.of(context).size.height,
+                  child: DataView()
                 ),
-                const SizedBox(
-                  height: 50,
-                ),
-      PieChartforweek(controllers: summaryController)
-                // Container(
-                //   height: 400,
-                //   child: Obx(() {
-                //     if (summaryController.loading.isTrue) {
-                //       // Show loading indicator
-                //       return Center(child: CircularProgressIndicator());
-                //     } else {
-                //       // Data has been loaded, show WeekChart
-                //       return
-                //     }
-                //   }),
-                // ),
-             //   PieChart(controllers: summaryControllersds),
+
+
 
       
       
@@ -268,36 +244,7 @@ class _SummayedState extends State<Summayed> {
             visible: selectedIndex == 1,
             child: Column(
               children: [
-                Container(
-                  height: 400,
-                  child: Obx(() {
-                    if (summaryController.loading.isTrue) {
-                      // Show loading indicator
-                      return Center(child: CircularProgressIndicator());
-                    } else {
-                      // Data has been loaded, show WeekChart
-                      return StockColumnformonth(
-                        controllers: summaryController,
-                      );
-                    }
-                  }),
-                ),
-
-                const SizedBox(
-                  height: 30,
-                ),
-                Container(
-                  height: 400,
-                  child: Obx(() {
-                    if (summaryController.loading.isTrue) {
-                      // Show loading indicator
-                      return Center(child: CircularProgressIndicator());
-                    } else {
-                      // Data has been loaded, show WeekChart
-                      return PieChartFormonth(controllers: summaryController);
-                    }
-                  }),
-                ),
+                DataViewForThisMonth()
 
               ],
             ),
@@ -351,7 +298,7 @@ class _SummayedState extends State<Summayed> {
 
         (summaryController.lastMainKWValue * 70 / 1000).toStringAsFixed(2);
 
-        return Text("Rs. ${summaryController.formatValued(lastindexvalue*70)}", style: const TextStyle(
+        return Text("Rs ${summaryController.formatValued(lastindexvalue*70)}", style: const TextStyle(
           fontSize: 24,
           fontWeight: FontWeight.w700,
           height: 1.5,

@@ -33,7 +33,7 @@ class HistoricalController extends GetxController {
       endDate(picked.toLocal().toString().split(' ')[0]);
       await fetchSecondApiData();
       kwData.clear();
-      await fetchData();
+       fetchData();
     }
   }
 
@@ -56,7 +56,7 @@ class HistoricalController extends GetxController {
       String? storedUsername = prefs.getString('username');
       // Assuming you have a user or a mechanism to select the current username dynamically
       final String username = 'ahmad'; // Replace with actual dynamic username if needed
-      final url = Uri.parse('http://203.135.63.22:8000/buildingmap?username=$storedUsername');
+      final url = Uri.parse('http://203.135.63.47:8000/buildingmap?username=$storedUsername');
       final response = await http.get(url);
 
       if (response.statusCode == 200) {
@@ -78,7 +78,7 @@ class HistoricalController extends GetxController {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? storedUsername = prefs.getString('username');
       // Replace with dynamic dates or parameters as necessary
-      final url = Uri.parse('http://203.135.63.22:8000/data?username=$storedUsername&mode=hour&start=${startDate.value}&end=${endDate.value}');
+      final url = Uri.parse('http://203.135.63.47:8000/data?username=$storedUsername&mode=hour&start=${startDate.value}&end=${endDate.value}');
       final response = await http.get(url);
 
       if (response.statusCode == 200) {
@@ -129,7 +129,7 @@ class HistoricalController extends GetxController {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? storedUsername = prefs.getString('username');
     final response = await http.get(Uri.parse(
-        'http://203.135.63.22:8000/buildingmap?username=$storedUsername'));
+        'http://203.135.63.47:8000/buildingmap?username=$storedUsername'));
 
     if (response.statusCode == 200) {
       final Map<String, dynamic> responseData = json.decode(response.body);
@@ -143,7 +143,7 @@ class HistoricalController extends GetxController {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? storedUsername = prefs.getString('username');
     final response = await http.get(Uri.parse(
-        'http://203.135.63.22:8000/data?username=$storedUsername&mode=hour&start=${startDate.value}&end=${endDate.value}'));
+        'http://203.135.63.47:8000/data?username=$storedUsername&mode=hour&start=${startDate.value}&end=${endDate.value}'));
 
     if (response.statusCode == 200) {
       final Map<String, dynamic> secondApiResponse = json.decode(response.body);
@@ -172,7 +172,7 @@ class HistoricalController extends GetxController {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? storedUsername = prefs.getString('username');
       final String appuril =
-          'http://203.135.63.22:8000/data?username=$storedUsername&mode=hour&start=${startDate.value}&end=${endDate.value}';
+          'http://203.135.63.47:8000/data?username=$storedUsername&mode=hour&start=${startDate.value}&end=${endDate.value}';
       final response = await http.get(Uri.parse(appuril));
 
       print(appuril);

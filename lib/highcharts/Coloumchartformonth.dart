@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import 'package:high_chart/high_chart.dart';
 
+import '../controller/Summary_Controller/max_avg_min_controller.dart';
 import '../controller/datacontroller.dart';
 import '../controller/summaryedController.dart';
 

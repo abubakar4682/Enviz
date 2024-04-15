@@ -20,7 +20,7 @@ class BottomPage extends StatefulWidget {
 class _BottomPageState extends State<BottomPage> {
   int currentIndex = 0;
   List<Widget> pages = [
-     Summary(),
+    Summayed(),
     const LiveDataScreen(),
     const Historical(),
     Dailyanalusic(),
