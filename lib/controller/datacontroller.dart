@@ -578,8 +578,7 @@ class DataControllers extends GetxController {
     prefs.setString('displayName', displayName); // Save displayName
     prefs.setString('email', email); // Save email
 
-    fetchData();
-    // fetchDataforlive();
+
 
     Get.to(() => BottomPage());
   }

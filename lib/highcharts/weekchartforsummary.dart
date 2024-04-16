@@ -5,7 +5,7 @@ import '../controller/Summary_Controller/max_avg_min_controller.dart';
 import '../controller/datacontroller.dart';
 import '../controller/summaryedController.dart';
 class WeekChartforsummary extends StatelessWidget {
-  final SummaryysControllers controllers;
+  final MinMaxAvgValueControllers controllers;
   WeekChartforsummary({Key? key, required this.controllers}) : super(key: key);
   @override
   Widget build(BuildContext context) {

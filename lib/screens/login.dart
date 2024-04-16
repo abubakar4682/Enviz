@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../Theme/theme.dart';
 import '../Utils/colors.dart';
+import '../controller/Summary_Controller/Week_Data_Chart_Controller.dart';
 import '../controller/datacontroller.dart';
 import '../controller/summaryedController.dart';
 import '../widgets/Cutom_button.dart';
@@ -15,6 +16,7 @@ class Login extends StatefulWidget {
 
 class _LoginState extends State<Login> {
   final authController = Get.put(DataControllers());
+
  // final summaryController = Get.put(SummaryysControllers());
 
 
@@ -82,8 +84,9 @@ class _LoginState extends State<Login> {
                 return authController.loading.value
                     ? Center(child: CircularProgressIndicator())
                     : FilledRedButton(
-                  onPressed: () {
+                  onPressed: () async {
                     authController.userRegister();
+
                   //  summaryController.fetchData();
                   },
                   text: 'Login',

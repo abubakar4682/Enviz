@@ -8,7 +8,7 @@ import '../controller/datacontroller.dart';
 import '../controller/summaryedController.dart';
 
 class StockColumnformonth extends StatelessWidget {
-  final SummaryysControllers controllers;
+  final MinMaxAvgValueControllers controllers;
 
   StockColumnformonth({Key? key, required this.controllers}) : super(key: key);
 

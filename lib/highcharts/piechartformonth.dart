@@ -7,7 +7,7 @@ import '../controller/summaryedController.dart';
 
 
 class PieChartFormonth extends StatelessWidget {
-  final SummaryysControllers controllers;
+  final MinMaxAvgValueControllers controllers;
 
   PieChartFormonth({Key? key, required this.controllers}) : super(key: key);
 

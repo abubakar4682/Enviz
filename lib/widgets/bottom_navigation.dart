@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../screens/Historical.dart';
 
 import '../screens/Live.dart';
+import '../screens/SummaryTab/summary_full_screen.dart';
 import '../screens/dailyanalysi.dart';
 
 import '../screens/summary.dart';
@@ -20,7 +21,7 @@ class BottomPage extends StatefulWidget {
 class _BottomPageState extends State<BottomPage> {
   int currentIndex = 0;
   List<Widget> pages = [
-    Summayed(),
+    SummaryTab(),
     const LiveDataScreen(),
     const Historical(),
     Dailyanalusic(),
@@ -41,7 +42,7 @@ class _BottomPageState extends State<BottomPage> {
         type: BottomNavigationBarType.fixed,
         onTap: onTapped,
         items: [
-          _buildNavigationBarItem('Summary', 'assets/images/Overview.png', 0),
+          _buildNavigationBarItem('SummaryTab', 'assets/images/Overview.png', 0),
           _buildNavigationBarItem('Live', 'assets/images/Historical.png', 1),
           _buildNavigationBarItem(
               'Historical', 'assets/images/Last 24 Hours.png', 2),

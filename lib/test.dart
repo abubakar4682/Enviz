@@ -3438,14 +3438,14 @@ class MyHomePage extends StatelessWidget {
 // // // import '../widgets/SideDrawer.dart';
 // // // import '../widgets/switch_button.dart';
 // // //
-// // // class Summary extends StatefulWidget {
-// // //   const Summary({Key? key}) : super(key: key);
+// // // class SummaryTab extends StatefulWidget {
+// // //   const SummaryTab({Key? key}) : super(key: key);
 // // //
 // // //   @override
-// // //   State<Summary> createState() => _SummaryState();
+// // //   State<SummaryTab> createState() => _SummaryState();
 // // // }
 // // //
-// // // class _SummaryState extends State<Summary> {
+// // // class _SummaryState extends State<SummaryTab> {
 // // //   final summaryController = Get.put(DatasControllers());
 // // //   bool isDataFetched = false;
 // // //
@@ -3511,7 +3511,7 @@ class MyHomePage extends StatelessWidget {
 // // //       appBar: AppBar(
 // // //         title: Center(
 // // //           child: CustomText(
-// // //             texts: 'Summary',
+// // //             texts: 'SummaryTab',
 // // //             textColor: const Color(0xff002F46),
 // // //           ),
 // // //         ),

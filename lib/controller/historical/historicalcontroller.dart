@@ -55,7 +55,7 @@ class HistoricalController extends GetxController {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? storedUsername = prefs.getString('username');
       // Assuming you have a user or a mechanism to select the current username dynamically
-      final String username = 'ahmad'; // Replace with actual dynamic username if needed
+       // Replace with actual dynamic username if needed
       final url = Uri.parse('http://203.135.63.47:8000/buildingmap?username=$storedUsername');
       final response = await http.get(url);
 

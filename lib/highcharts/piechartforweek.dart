@@ -6,7 +6,7 @@ import '../controller/summaryedController.dart';
 
 
 class PieChartforweek extends StatelessWidget {
-  final SummaryysControllers controllers;
+  final MinMaxAvgValueControllers controllers;
 
   PieChartforweek({Key? key, required this.controllers}) : super(key: key);
 

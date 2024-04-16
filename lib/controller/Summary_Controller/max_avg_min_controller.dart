@@ -8,7 +8,7 @@ import 'package:get/get_state_manager/src/simple/get_controllers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 
-class SummaryysControllers extends GetxController {
+class MinMaxAvgValueControllers extends GetxController {
   RxList<Map<String, dynamic>> kwData = <Map<String, dynamic>>[].obs;
   Map<String, Map<String, double>> dailyItemSumsMap = {};
   RxDouble lastMainKWValue = 0.0.obs;
@@ -29,9 +29,6 @@ class SummaryysControllers extends GetxController {
 
   RxList<String> result = <String>['0', '0', '0'].obs;
 
-
-
-
   Future<void> fetchFirstApiData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? storedUsername = prefs.getString('username');
@@ -41,10 +38,30 @@ class SummaryysControllers extends GetxController {
     if (response.statusCode == 200) {
       final Map<String, dynamic> responseData = json.decode(response.body);
       firstApiData!.value = responseData;
+
+      // Extract keys dynamically and store them for later use
+      List<String> floorKeys = responseData.keys.map((key) => '$key\_[kW]').toList();
+      result.value = floorKeys; // Assuming `result` is an RxList<String> for storing the keys
     } else {
       throw Exception('Failed to load data from the first API');
     }
   }
+
+
+  //
+  // Future<void> fetchFirstApiData() async {
+  //   SharedPreferences prefs = await SharedPreferences.getInstance();
+  //   String? storedUsername = prefs.getString('username');
+  //   final response = await http.get(Uri.parse(
+  //       'http://203.135.63.47:8000/buildingmap?username=$storedUsername'));
+  //
+  //   if (response.statusCode == 200) {
+  //     final Map<String, dynamic> responseData = json.decode(response.body);
+  //     firstApiData!.value = responseData;
+  //   } else {
+  //     throw Exception('Failed to load data from the first API');
+  //   }
+  // }
 
   Future<void> fetchSecondApiData() async {
     DateTime currentDate = DateTime.now();
@@ -60,7 +77,7 @@ class SummaryysControllers extends GetxController {
     print(appurl);
 
     if (response.statusCode == 200) {
-      print('abubakar');
+      print('api works');
       final Map<String, dynamic> secondApiResponse = json.decode(response.body);
       final Map<String, dynamic> filteredData = {};
 
