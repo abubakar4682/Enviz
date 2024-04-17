@@ -71,6 +71,17 @@ class DataControllerForThisMonth extends GetxController {
 }
 
 
+
+
+
+
+
+
+
+
+
+
+
 class DataViewForThisMonth extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
