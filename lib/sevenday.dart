@@ -42,33 +42,35 @@ class _DataDisplayScreenState extends State<DataDisplayScreen> {
     // Extract the data from the DataController
     Map<String, Map<String, double>> dailyItemSumsMap =
         _dataController.dailyItemSumsMap;
-    return ListView.builder(
-      itemCount: dailyItemSumsMap.length,
-      itemBuilder: (context, dateIndex) {
-        String date = dailyItemSumsMap.keys.elementAt(dateIndex);
-        Map<String, double>? itemSums = dailyItemSumsMap[date];
-        return Card(
-          margin: EdgeInsets.all(8.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              //   StockColumns(controllers: _dataController),
-              ListTile(
-                title: Text('Date: $date'),
-              ),
-              Divider(),
-              ...itemSums!.entries.map((entry) {
-                String itemName = entry.key;
-                double sum = entry.value;
-
-                return ListTile(
-                  title: Text('$itemName: $sum'),
-                );
-              }).toList(),
-            ],
-          ),
-        );
-      },
+    return Scaffold(
+      body: ListView.builder(
+        itemCount: dailyItemSumsMap.length,
+        itemBuilder: (context, dateIndex) {
+          String date = dailyItemSumsMap.keys.elementAt(dateIndex);
+          Map<String, double>? itemSums = dailyItemSumsMap[date];
+          return Card(
+            margin: EdgeInsets.all(8.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                //   StockColumns(controllers: _dataController),
+                ListTile(
+                  title: Text('Date: $date'),
+                ),
+                Divider(),
+                ...itemSums!.entries.map((entry) {
+                  String itemName = entry.key;
+                  double sum = entry.value;
+      
+                  return ListTile(
+                    title: Text('$itemName: $sum'),
+                  );
+                }).toList(),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 }
@@ -110,7 +112,7 @@ class Controllers extends GetxController {
 
         try {
           // Make an HTTP GET request
-          final String apiUrl = "http://203.135.63.22:8000/data?username=ahmad&mode=hour&start=$formattedDate&end=$formattedDate";
+          final String apiUrl = "http://203.135.63.47:8000/data?username=ppjiq&mode=hour&start=2024-04-10&end=2024-04-14";
           final response = await http.get(Uri.parse(apiUrl));
 
           // Check if the request was successful (status code 200)

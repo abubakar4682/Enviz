@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1022823009147",
+    "project_id": "enviz-fb248",
+    "storage_bucket": "enviz-fb248.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1022823009147:android:07ef7e1d4d9c2449e34bde",
+        "android_client_info": {
+          "package_name": "com.example.highcharts_demo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAhSfaI5N_zNyuZ8eu4M9Zw30Gz0o_D-Fs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../Notifications/notification_services.dart';
 import '../widgets/bottom_navigation.dart';
 import 'login.dart';
 
@@ -13,10 +14,12 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  NotificationServices notificationServices = NotificationServices();
   @override
   void initState() {
     super.initState();
     redirectToNextScreen();
+    notificationServices.requestNotificationPermission();
   }
 
   Future<void> redirectToNextScreen() async {

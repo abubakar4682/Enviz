@@ -40,25 +40,29 @@
 //   }
 // }
 
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:highcharts_demo/screens/Historical.dart';
-import 'package:highcharts_demo/screens/login.dart';
+
 
 
 import 'package:highcharts_demo/screens/splashe_screen.dart';
-import 'package:highcharts_demo/sevenday.dart';
-import 'package:highcharts_demo/summmer.dart';
-import 'package:highcharts_demo/test.dart';
-import 'package:highcharts_demo/today.dart';
+
 
 import 'controller/ThemeController.dart';
-import 'heatsmap.dart';
-import 'highchartcoulm.dart';
+import 'firebase_options.dart';
 
 
 
-void main() {
+
+void main() async{
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+
+);
+
+
   runApp(MyApp());
 }
 
@@ -75,8 +79,11 @@ class MyApp extends StatelessWidget {
       // Removed darkTheme since it's not needed if you're always using light theme
       themeMode: ThemeMode.light,
       home:    SplashScreen(),
-
-      // },
     );
   }
 }
+
+
+// await Firebase.initializeApp(
+// options: DefaultFirebaseOptions.currentPlatform,
+// );

@@ -297,7 +297,7 @@
 //     String formattedStartDate = "${startDate.year}-${startDate.month.toString().padLeft(2, '0')}-${startDate.day.toString().padLeft(2, '0')}";
 //     String formattedEndDate = "${endDate.year}-${endDate.month.toString().padLeft(2, '0')}-${endDate.day.toString().padLeft(2, '0')}";
 //
-//     final Uri uri = Uri.parse('http://203.135.63.47:8000/data?username=ppjiq&mode=hour&start=$formattedStartDate&end=$formattedEndDate');
+//     final Uri uri = Uri.parse('http://203.135.63.47:8000/data?username=ahmad&mode=hour&start=$formattedStartDate&end=$formattedEndDate');
 //
 //     try {
 //       final response = await http.get(uri);
@@ -367,23 +367,37 @@
 
 
 
-/// using for loop logic
+
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 void main() {
-  runApp(MyAppcvcc());
+  runApp(MyApp());
 }
 
-class MyAppcvcc extends StatefulWidget {
+class MyApp extends StatelessWidget {
   @override
-  _MyAppcvccState createState() => _MyAppcvccState();
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'KW Data Viewer',
+      home: Scaffold(
+        appBar: AppBar(
+          title: Text('KW Data Viewer'),
+        ),
+        body: KWDataWidget(),
+      ),
+    );
+  }
 }
 
-class _MyAppcvccState extends State<MyAppcvcc> {
-  Map<String, List<List<dynamic>>> _data = {};
-  DateTime startDate = DateTime.now();
+class KWDataWidget extends StatefulWidget {
+  @override
+  _KWDataWidgetState createState() => _KWDataWidgetState();
+}
+
+class _KWDataWidgetState extends State<KWDataWidget> {
+  List<Map<String, dynamic>> kwData = [];
 
   @override
   void initState() {
@@ -392,94 +406,38 @@ class _MyAppcvccState extends State<MyAppcvcc> {
   }
 
   Future<void> fetchData() async {
-    DateTime endDate = DateTime.now();
-    DateTime startDate = endDate.subtract(Duration(days: 6));
-
-    String formattedStartDate = "${startDate.year}-${startDate.month.toString().padLeft(2, '0')}-${startDate.day.toString().padLeft(2, '0')}";
-    String formattedEndDate = "${endDate.year}-${endDate.month.toString().padLeft(2, '0')}-${endDate.day.toString().padLeft(2, '0')}";
-
-    final Uri uri = Uri.parse('http://203.135.63.47:8000/data?username=ppjiq&mode=hour&start=$formattedStartDate&end=$formattedEndDate');
-
-    try {
-      final response = await http.get(uri);
-      if (response.statusCode == 200) {
-        final jsonResponse = jsonDecode(response.body);
-        final Map<String, dynamic> data = jsonResponse['data'];
-        final Map<String, List<List<dynamic>>> processedData = {};
-
-        data.forEach((key, value) {
-          if (key.endsWith('_[kW]')) {
-            List<dynamic> listValues = value.map((item) {
-              // Check and convert NA, null, or empty strings to 0.0
-              double value = 0.0;
-              if (item != null && item != 'NA' && item != '') {
-                value = double.tryParse(item.toString()) ?? 0.0;
-              }
-
-              // Convert to kilowatts (kW) and round to two decimal places
-              return double.parse((value / 1000).toStringAsFixed(2));
-            }).toList();
-
-            List<List<dynamic>> chunks = [];
-            for (var i = 0; i < listValues.length; i += 24) {
-              List<dynamic> chunk = listValues.sublist(i, i + 24 > listValues.length ? listValues.length : i + 24);
-              if (chunk.isEmpty) {
-                chunk = List.filled(24, 0.0);
-              }
-              chunks.add(chunk);
-            }
-            processedData[key] = chunks;
-          }
-        });
-
-        setState(() {
-          _data = processedData;
-          this.startDate = startDate;
-        });
-      } else {
-        print('Failed to load data with status code: ${response.statusCode}');
-      }
-    } catch (e) {
-      print('Failed to load data with error: $e');
+    const url = 'http://203.135.63.47:8000/data?username=ppjiq&mode=hour&start=2024-04-15&end=2024-04-15';
+    var response = await http.get(Uri.parse(url));
+    if (response.statusCode == 200) {
+      var jsonData = json.decode(response.body);
+      var data = jsonData['data'] as Map<String, dynamic>;
+      setState(() {
+        kwData = data.entries
+            .where((entry) => entry.key.endsWith('_[kW]'))
+            .map((entry) => {
+          'key': entry.key,
+          'values': entry.value,
+        })
+            .toList();
+      });
     }
   }
 
-
-
-
-
-
-
-
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          title: Text('Display kW Data with Dates'),
-        ),
-        body: ListView.builder(
-          itemCount: _data.length,
-          itemBuilder: (context, index) {
-            String key = _data.keys.elementAt(index);
-            List<List<dynamic>> dayChunks = _data[key]!;
-            return ExpansionTile(
-              title: Text(key),
-              children: dayChunks.asMap().entries.map((entry) {
-                int dayIndex = entry.key;
-                List<dynamic> dayValues = entry.value;
-                // Calculate the date for the current chunk
-                DateTime chunkDate = startDate.add(Duration(days: dayIndex));
-                String formattedDate = "${chunkDate.year}-${chunkDate.month.toString().padLeft(2, '0')}-${chunkDate.day.toString().padLeft(2, '0')}";
-                return ListTile(
-                  title: Text('Date: $formattedDate'),
-                  subtitle: Text(dayValues.join(', ')),
-                );
-              }).toList(),
-            );
-          },
-        ),
+    return Scaffold(
+      body: ListView.builder(
+        itemCount: kwData.length,
+        itemBuilder: (context, index) {
+          var entry = kwData[index];
+          return ListTile(
+            title: Text(entry['key']),
+            subtitle: Text(entry['values'].join(', ')),
+          );
+        },
       ),
     );
   }
 }
+
+

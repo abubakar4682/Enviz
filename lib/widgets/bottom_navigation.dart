@@ -6,10 +6,7 @@ import '../screens/Live.dart';
 import '../screens/SummaryTab/summary_full_screen.dart';
 import '../screens/dailyanalysi.dart';
 
-import '../screens/summary.dart';
 
-import '../summmer.dart';
-import '../today.dart';
 
 class BottomPage extends StatefulWidget {
   BottomPage({Key? key}) : super(key: key);
@@ -19,6 +16,7 @@ class BottomPage extends StatefulWidget {
 }
 
 class _BottomPageState extends State<BottomPage> {
+
   int currentIndex = 0;
   List<Widget> pages = [
     SummaryTab(),
