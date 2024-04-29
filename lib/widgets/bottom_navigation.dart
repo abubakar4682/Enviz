@@ -40,7 +40,7 @@ class _BottomPageState extends State<BottomPage> {
         type: BottomNavigationBarType.fixed,
         onTap: onTapped,
         items: [
-          _buildNavigationBarItem('SummaryTab', 'assets/images/Overview.png', 0),
+          _buildNavigationBarItem('Summary', 'assets/images/Overview.png', 0),
           _buildNavigationBarItem('Live', 'assets/images/Historical.png', 1),
           _buildNavigationBarItem(
               'Historical', 'assets/images/Last 24 Hours.png', 2),
@@ -59,7 +59,7 @@ class _BottomPageState extends State<BottomPage> {
         imagePath,
         width: 30,
         height: 30,
-        color: currentIndex == index ? Colors.blue : Colors.grey,
+        color: currentIndex == index ? Color(0xff009F8D) : Colors.grey,
       ),
       backgroundColor:
           currentIndex == index ? Colors.lightBlueAccent : Colors.white,

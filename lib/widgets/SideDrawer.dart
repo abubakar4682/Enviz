@@ -5,13 +5,19 @@ import 'package:get/get_core/src/get_main.dart';
 import 'package:highcharts_demo/screens/splashe_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../controller/NotificationController/notification_time.dart';
+import '../controller/NotificationController/toggle_controller.dart';
 import '../controller/ThemeController.dart';
+import '../controller/auth_controller/login_controller.dart';
 import '../controller/datacontroller.dart';
 import '../controller/historical/historicalcontroller.dart';
 
+import '../screens/SummaryTab/this_month.dart';
 import '../screens/SummaryTab/this_week.dart';
 
 import '../today.dart';
+import 'CustomText.dart';
+
 class Sidedrawer extends StatelessWidget {
   const Sidedrawer({
     Key? key,
@@ -27,6 +33,7 @@ class Sidedrawer extends StatelessWidget {
       'email': prefs.getString('email'),
     };
   }
+
   Future<void> clearAllSharedPreferences() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.clear(); // Clear all shared preferences data
@@ -42,17 +49,21 @@ class Sidedrawer extends StatelessWidget {
           FutureBuilder<Map<String, String?>>(
             future: getDrawerData(),
             builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.done && snapshot.hasData) {
+              if (snapshot.connectionState == ConnectionState.done &&
+                  snapshot.hasData) {
                 return UserAccountsDrawerHeader(
                   accountName: Text(snapshot.data!['displayName'] ?? ''),
                   accountEmail: Text(snapshot.data!['email'] ?? ''),
-                  currentAccountPicture: CircleAvatar(
+                  currentAccountPicture: const CircleAvatar(
                     child: Icon(Icons.person),
+                  ),
+                  decoration: BoxDecoration(
+                    color: Color(0xff009F8D), // Replace with your desired color
                   ),
                 );
               } else {
                 // Display a loading indicator or placeholder
-                return DrawerHeader(
+                return const DrawerHeader(
                   decoration: BoxDecoration(
                     color: Colors.blue,
                   ),
@@ -62,7 +73,8 @@ class Sidedrawer extends StatelessWidget {
             },
           ),
           ListTile(
-            title: Text('Info'),
+            leading: const Icon(Icons.info,color: Color(0xff009F8D),),
+            title: const Text('Info'),
             onTap: () {
               Navigator.push(
                 context,
@@ -72,23 +84,24 @@ class Sidedrawer extends StatelessWidget {
             },
           ),
           ListTile(
-            title: Text("Contact Support"),
+            leading: const Icon(Icons.support_agent,color: Color(0xff009F8D)),
+            trailing: Container(
+              width: 10,
+              height: 10,
+              decoration: const BoxDecoration(
+                color: Colors.red,
+                shape: BoxShape.circle,
+              ),
+            ),
+            title: const Text("Contact Support"),
             onTap: () => _showSupportContact(context),
           ),
-          // ListTile(
-          //   leading: Icon(Icons.brightness_4), // Icon for theme toggle
-          //   title: Text('Toggle Dark Theme'),
-          //   onTap: () {
-          //     // Toggle the theme
-          //     themeController.toggleTheme();
-          //     Navigator.pop(context); // Close the drawer
-          //   },
-          // ),
-          SizedBox(
+          const SizedBox(
             height: 20,
           ),
           ListTile(
-            title: Text('Setting'),
+            leading: const Icon(Icons.settings,color: Color(0xff009F8D)),
+            title: const Text('Setting'),
             onTap: () {
               Navigator.push(
                 context,
@@ -98,60 +111,71 @@ class Sidedrawer extends StatelessWidget {
             },
           ),
           ListTile(
+            leading: Icon(Icons.logout,color: Color(0xff009F8D)),
             title: Text('Logout'),
             onTap: () async {
-              final HistoricalController historicalController = Get.put(HistoricalController());
-              final DataControllers loginController = Get.put(DataControllers());
-              final WeekDataController weekDataController = Get.put(WeekDataController());
-
+              final HistoricalController historicalController =
+                  Get.put(HistoricalController());
+              final DataControllers loginController =
+                  Get.put(DataControllers());
+              final WeekDataController weekDataController =
+                  Get.put(WeekDataController());
+              final DataControllerForThisMonth monthDataController =
+                  Get.put(DataControllerForThisMonth());
+              final LoginControllers loginControllers =
+                  Get.put(LoginControllers());
+              final NotificationController notificationController =
+                  Get.put(NotificationController());
+              Get.delete<LoginControllers>();
               Get.delete<HistoricalController>();
-              Get.delete<WeekDataController>();  // Clear the WeekDataController from memory
+              Get.delete<
+                  WeekDataController>(); // Clear the WeekDataController from memory
+              Get.delete<DataControllerForThisMonth>();
+              Get.delete<NotificationController>();
 
               // Reset the controllers' state
+              notificationController.resetNotificationsOnLogout();
+              loginControllers.resetloginController();
               loginController.resetloginController();
               historicalController.resetController();
-              weekDataController.resetController();  // Reset week data controller
-
-              await clearAllSharedPreferences();  // Clear all SharedPreferences data
+              weekDataController
+                  .resetController(); // Reset week data controller
+              monthDataController.resetController();
+              await clearAllSharedPreferences(); // Clear all SharedPreferences data
 
               // Navigate to the SplashScreen, and then immediately to the Login screen
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(builder: (BuildContext context) => SplashScreen()),
+                MaterialPageRoute(
+                    builder: (BuildContext context) => SplashScreen()),
               );
-
-              // Optionally, if SplashScreen navigates based on SharedPreferences,
-              // directly navigate to Login screen instead:
-              // Navigator.pushReplacement(
-              //   context,
-              //   MaterialPageRoute(builder: (BuildContext context) => Login()),
-              // );
             },
           ),
-
-
-
         ],
       ),
     );
   }
 }
+
 class SettingsScreen extends StatefulWidget {
   @override
   _SettingsScreenState createState() => _SettingsScreenState();
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
+  final NotificationController controller = Get.put(NotificationController());
+  final LimitController limitController = Get.put(LimitController());
+  final TextEditingController textEditingController = TextEditingController();
   bool notificationsEnabled = false;
   String selectedHour = 'Not set';
   String notificationLimit = '';
 
-  void _showHourPicker() {
+  void _showHourPicker(BuildContext context) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text("Select Hour"),
+          title: const Text("Select Hour"),
           content: Container(
             width: double.maxFinite,
             child: ListView.builder(
@@ -161,9 +185,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 return ListTile(
                   title: Text("$index:00"),
                   onTap: () {
-                    setState(() {
-                      selectedHour = "$index:00";
-                    });
+                    controller.updateHour("$index:00");
                     Navigator.of(context).pop();
                   },
                 );
@@ -178,49 +200,115 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Settings")),
+      appBar: AppBar(
+        title: Center(
+          child: CustomText(
+            texts: 'Settings',
+            textColor: const Color(0xff002F46),
+          ),
+        ),
+        actions: [
+          SizedBox(
+            width: 40,
+            height: 30,
+            child: Image.asset('assets/images/Vector.png'),
+          ),
+        ],
+      ),
       body: ListView(
         children: [
-          SwitchListTile(
-            title: Text("Enable Notifications"),
-            value: notificationsEnabled,
-            onChanged: (bool value) {
-              setState(() {
-                notificationsEnabled = value;
-              });
-            },
-          ),
-          ListTile(
-            title: Text("Notification Hour"),
-            subtitle: Text(selectedHour),
-            onTap: _showHourPicker,
-          ),
-          ListTile(
-            title: Text("Setting Notification Limit (kW)"),
-            subtitle: TextField(
-              decoration: InputDecoration(
-                hintText: "Enter limit in kW",
-              ),
-              keyboardType: TextInputType.numberWithOptions(decimal: true),
-              onChanged: (value) {
-                notificationLimit = value;
-              },
+          SizedBox(height: 30),
+          Card(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            elevation: 4,
+            shadowColor: Color(0xff009F8D).withOpacity(0.5),
+            margin: EdgeInsets.all(8),
+            child: Column(
+              children: [
+                ListTile(
+                  leading: Icon(Icons.notifications_active, color: Color(0xff009F8D)),
+                  title: Text("Enable Notifications", style: TextStyle(color: Color(0xff002F46))),
+                  trailing: Obx(() => Switch(
+                 //   activeColor: Color(0xff009F8D), // Color of the track when switch is active
+                    activeTrackColor: Color(0xff009F8D),// Color of the thumb when switch is active
+                    value: controller.notificationsEnabled.value,
+                    onChanged: (bool value) {
+                      controller.toggleNotifications(value);
+                    },
+                  )
+
+                  ),
+                )
+              ],
             ),
           ),
+          Card(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            elevation: 4,
+            shadowColor: Color(0xff009F8D).withOpacity(0.5),
+            margin: EdgeInsets.all(8),
+            child: ListTile(
+              leading: Icon(Icons.access_time, color: Color(0xff009F8D)),
+              title: Text("Notification Hour", style: TextStyle(color: Color(0xff002F46))),
+              subtitle: Obx(() => Text(controller.selectedHour.value)),
+              onTap: () => _showHourPicker(context),
+            ),
+          ),
+      Card(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        elevation: 4,
+        shadowColor: Color(0xff009F8D).withOpacity(0.5),
+        margin: EdgeInsets.all(8),
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: Icon(Icons.settings, color: Color(0xff009F8D)),
+                title: Text("Setting Notification Limit (kW)", style: TextStyle(color: Color(0xff002F46))),
+                subtitle: TextField(
+                  controller: textEditingController,
+                  decoration: InputDecoration(
+                    hintText: "Enter limit in kW",
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.numberWithOptions(decimal: true),
+                ),
+              ),
+              SizedBox(height: 10), // Adds some space between the text field and the button
+              ElevatedButton(
+                onPressed: () {
+                  // Get the text from the TextEditingController and pass it to the updateLimit method
+                  if (textEditingController.text.isNotEmpty) {
+                    limitController.updateLimit(textEditingController.text);
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  foregroundColor: Colors.white, backgroundColor: Color(0xff009F8D), // Button text color
+                ),
+                child: Text('Set'),
+              ),
+            ],
+          ),
+        ),
+      ),
         ],
       ),
     );
   }
 }
+
 void _showSupportContact(BuildContext context) {
   showDialog(
     context: context,
     builder: (BuildContext context) {
       return AlertDialog(
-        title: Text("Contact Support"),
+        title: const Text("Contact Support"),
         content: RichText(
-          text: TextSpan(
-            style: TextStyle( // Default text style
+          text: const TextSpan(
+            style: TextStyle(
+              // Default text style
               color: Colors.black,
               fontSize: 16,
             ),
@@ -230,7 +318,8 @@ void _showSupportContact(BuildContext context) {
               ),
               TextSpan(
                 text: "contact@energyinformatics.pk",
-                style: TextStyle( // Larger font for email
+                style: TextStyle(
+                  // Larger font for email
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
@@ -240,7 +329,8 @@ void _showSupportContact(BuildContext context) {
               ),
               TextSpan(
                 text: "(92) 330 163 7589",
-                style: TextStyle( // Larger font for phone number
+                style: TextStyle(
+                  // Larger font for phone number
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
@@ -261,7 +351,6 @@ void _showSupportContact(BuildContext context) {
     },
   );
 }
-
 
 // class Sidedrawer extends StatelessWidget {
 //   const Sidedrawer({

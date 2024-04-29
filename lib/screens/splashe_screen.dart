@@ -17,9 +17,16 @@ class _SplashScreenState extends State<SplashScreen> {
   NotificationServices notificationServices = NotificationServices();
   @override
   void initState() {
-    super.initState();
     redirectToNextScreen();
-    notificationServices.requestNotificationPermission();
+    // notificationServices.requestNotificationPermission();
+    // notificationServices.firebaseInit();
+    // notificationServices.getDeviceToken().then((token) {
+    //
+    //
+    //   print('Device token: $token');
+    // });
+    super.initState();
+
   }
 
   Future<void> redirectToNextScreen() async {

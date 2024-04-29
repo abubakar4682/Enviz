@@ -39,33 +39,31 @@
 //     );
 //   }
 // }
-
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:highcharts_demo/screens/SummaryTab/summary_full_screen.dart';
 
 
 
 import 'package:highcharts_demo/screens/splashe_screen.dart';
+import 'package:highcharts_demo/summmer.dart';
 
 
 import 'controller/ThemeController.dart';
 import 'firebase_options.dart';
-
-
-
-
+import 'highcharts/area_chart.dart';
 void main() async{
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
+
 
 );
 
 
   runApp(MyApp());
 }
-
 class MyApp extends StatelessWidget {
   final List<Map<String, dynamic>> kwData = [];
   final ThemeController themeController = Get.put(ThemeController());
@@ -82,8 +80,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
-
-// await Firebase.initializeApp(
-// options: DefaultFirebaseOptions.currentPlatform,
-// );

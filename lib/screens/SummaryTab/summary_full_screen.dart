@@ -50,7 +50,7 @@ class _SummaryTabState extends State<SummaryTab> {
       appBar: AppBar(
         title: Center(
           child: CustomText(
-            texts: 'SummaryTab',
+            texts: 'Summary',
             textColor: const Color(0xff002F46),
           ),
         ),
@@ -66,6 +66,7 @@ class _SummaryTabState extends State<SummaryTab> {
         child: Column(
           children: [
             SwitchWidget(
+
               selectedIndex: selectedIndex,
               onToggle: (index) {
                 setState(() {
