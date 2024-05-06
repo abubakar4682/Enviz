@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-import '../screens/Historical.dart';
+import '../screens/historical.dart';
 
 import '../screens/Live.dart';
 import '../screens/SummaryTab/summary_full_screen.dart';
-import '../screens/dailyanalysi.dart';
+import '../screens/daily_analysi.dart';
 
 
 

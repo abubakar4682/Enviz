@@ -4,8 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:high_chart/high_chart.dart';
 
 import '../controller/Summary_Controller/max_avg_min_controller.dart';
-import '../controller/datacontroller.dart';
-import '../controller/summaryedController.dart';
+
 
 class StockColumnformonth extends StatelessWidget {
   final MinMaxAvgValueControllers controllers;
@@ -17,8 +16,8 @@ class StockColumnformonth extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 2),
       child: HighCharts(
-        loader: Center(
-          child: const SizedBox(
+        loader: const Center(
+          child: SizedBox(
             child: Text('loading'),
             width: 2,
           ),
@@ -48,7 +47,7 @@ class StockColumnformonth extends StatelessWidget {
 
         // Adjust the date to the Pakistani time zone
         DateTime dateTime = DateTime.parse(date);
-        DateTime pakistaniDateTime = dateTime.toUtc().add(Duration(hours: 5));
+        DateTime pakistaniDateTime = dateTime.toUtc().add(const Duration(hours: 5));
 
         // Convert sum to kilowatts
         double sumInKW = sum / 1000;

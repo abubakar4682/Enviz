@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:highcharts_demo/screens/login.dart';
-import 'package:highcharts_demo/screens/summary.dart';
+
 import 'package:http/http.dart' as http;
 import 'package:get/get.dart';
 import 'package:get/get_state_manager/src/simple/get_controllers.dart';
@@ -279,7 +279,7 @@ class DataControllers extends GetxController {
     if (username.isNotEmpty && password.isNotEmpty) {
       repository
           .registerApi(username, password)
-          .timeout(Duration(seconds: 10))
+          .timeout(const Duration(seconds: 10))
           .then((value) async {
         loading.value = false;
 
@@ -404,7 +404,7 @@ class DataControllers extends GetxController {
     String? storedUsername = prefs.getString('username');
     final username = usernamenameController.text.toString();
     if (storedUsername == null || storedUsername.isEmpty) {
-      Get.to(() => Login());
+      Get.to(() => const Login());
       // Handle the case where the username is not available
       print('Username is not available');
       return;
@@ -526,7 +526,7 @@ class DataControllers extends GetxController {
         }
 
         // Move to the next day
-        startDate = startDate.add(Duration(days: 1));
+        startDate = startDate.add(const Duration(days: 1));
       }
     } catch (error) {
       // Handle general error
@@ -536,7 +536,7 @@ class DataControllers extends GetxController {
 
   String formatToKW(double value) {
     double valueInKW = value / 1000.0;
-    return valueInKW.toStringAsFixed(3) + ' k';
+    return valueInKW.toStringAsFixed(3) + ' ';
   }
 
   String getMainPart(String fullName) {

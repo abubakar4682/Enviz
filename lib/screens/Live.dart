@@ -4,10 +4,10 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:high_chart/high_chart.dart';
-import 'package:highcharts_demo/widgets/CustomText.dart';
-import 'package:highcharts_demo/widgets/SideDrawer.dart';
+import 'package:highcharts_demo/widgets/custom_text.dart';
+import 'package:highcharts_demo/widgets/side_drawer.dart';
 
-import '../controller/Live/LiveController.dart';
+import '../controller/Live/live_controller.dart';
 import '../controller/datacontroller.dart';
 
 class LiveDataScreen extends StatefulWidget {
@@ -169,66 +169,68 @@ class StockPieWidget extends StatelessWidget {
   }
 
   String _generateChartData(List<Map<String, dynamic>> data) {
-    if (data.isEmpty) {
-      return ''; // Handle empty data case
-    }
-
     // Filter out the data for the "Main" category
     List<Map<String, dynamic>> filteredData = data.where((item) => item['prefixName'] != 'Main').toList();
 
     // Calculate the total sum of all values excluding "Main"
     double totalSum = filteredData.fold(0, (sum, item) => sum + (item['lastIndexValue'] ?? 0.0));
 
-    // Ensure totalSum is not zero to avoid division by zero when calculating percentage
-    if (totalSum == 0) {
-      return '{"series": []}'; // Return empty series if totalSum is zero to avoid further calculations
-    }
+    // Predefined colors for the categories
+    List<String> colors = ['red', 'green', 'blue', 'orange', 'purple', 'yellow', 'cyan', 'magenta']; // Add more colors if needed
 
-    // Calculate the percentage for each value excluding "Main" and format values
-    List<Map<String, dynamic>> seriesData = filteredData.map((itemData) {
+    // Generate series data for pie chart with color settings
+    List<Map<String, dynamic>> seriesData = [];
+    for (int i = 0; i < filteredData.length; i++) {
+      var itemData = filteredData[i];
       String prefixName = itemData['prefixName'];
-      double lastIndexValue = itemData['lastIndexValue'] ?? 0.0; // Provide a default value
-      double percentage = ((lastIndexValue / totalSum) * 100).isNaN ? 0.0 : ((lastIndexValue / totalSum) * 100).roundToDouble();
+      double lastIndexValue = itemData['lastIndexValue'] ?? 0.0;
+      double percentage = (totalSum == 0) ? 0.0 : ((lastIndexValue / totalSum) * 100).roundToDouble();
+      String color = colors[i % colors.length];  // Cycle through the colors array safely
 
-      return {
+      seriesData.add({
         'name': prefixName,
         'y': percentage,
-        'formattedValue': DataControllers().formatToKW(lastIndexValue),  // Use method to format lastIndexValue to kW
-      };
-    }).toList();
+        'formattedValue': DataControllers().formatToKW(lastIndexValue),
+        'color': color // Assign color to each segment
+      });
+    }
 
     String seriesDataJson = jsonEncode(seriesData);
 
+    // Return chart configuration with dynamically populated series data including color information
     return '''
-    {
-      "chart": {
-        "type": "pie",
-        "size": "75%"
-      },
-      "title": {
-        "text": "Appliance Share"
-      },
-      "tooltip": {
-        "valueSuffix": "%",
-        "pointFormat": "Power: <b>{point.formattedValue}</b>"
-      },
-      "plotOptions": {
-        "pie": {
-          "allowPointSelect": true,
-          "cursor": "pointer",
-          "dataLabels": {
-            "enabled": true,
-            "format": "<b>{point.name}</b>: {point.y}%"
-          }
-        }
-      },
-      "series": [{
-        "name": "Live Data",
-        "data": $seriesDataJson
-      }]
-    }
-    ''';
+  {
+    "chart": {
+      "type": "pie",
+      "size": "75%"
+    },
+    "title": {
+      "text": "Appliance Share"
+    },
+    "tooltip": {
+      "valueSuffix": "%",
+      "pointFormat": "Power: <b>{point.formattedValue}</b> kW"
+    },
+    "plotOptions": {
+      "pie": {
+        "allowPointSelect": true,
+        "cursor": "pointer",
+        "dataLabels": {
+          "enabled": true,
+          "format": "<b>{point.name}</b>: {point.y}%"
+        },
+        "showInLegend": true // Ensure legends are displayed
+      }
+    },
+    "series": [{
+      "name": "Live Data",
+      "data": $seriesDataJson
+    }]
   }
+  ''';
+  }
+
+
 }
 
 
@@ -238,12 +240,12 @@ class StockPieWidget extends StatelessWidget {
 // import 'package:get/get.dart';
 // import 'package:get/get_core/src/get_main.dart';
 // import 'package:high_chart/high_chart.dart';
-// import 'package:highcharts_demo/widgets/CustomText.dart';
-// import 'package:highcharts_demo/widgets/SideDrawer.dart';
+// import 'package:highcharts_demo/widgets/custom_text.dart';
+// import 'package:highcharts_demo/widgets/side_drawer.dart';
 //
 // import 'dart:convert';
 //
-// import '../controller/Live/LiveController.dart';
+// import '../controller/Live/live_controller.dart';
 // import '../controller/datacontroller.dart';
 //
 //

@@ -2,11 +2,10 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:highcharts_demo/screens/login.dart';
-import 'package:highcharts_demo/screens/summary.dart';
+
 import 'package:http/http.dart' as http;
 import 'package:get/get.dart';
-import 'package:get/get_state_manager/src/simple/get_controllers.dart';
+
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LiveDataControllers extends GetxController {

@@ -18,7 +18,7 @@ import 'dart:convert';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 
-import 'controller/historical/historicalcontroller.dart';
+import 'controller/historical/historical_controller.dart';
 
 class LineChartController extends GetxController {
   var isLoading = true.obs;

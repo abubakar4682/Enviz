@@ -1,9 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
-import 'package:highcharts_demo/nothing2.dart';
 
-import '../controller/historical/historicalcontroller.dart';
+
+import '../controller/historical/historical_controller.dart';
 
 class SelectStartndEndingDate extends StatelessWidget {
   const SelectStartndEndingDate({

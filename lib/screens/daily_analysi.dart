@@ -1,13 +1,18 @@
+import 'dart:typed_data';
+import 'package:pdf/widgets.dart' as pw;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
 import 'package:intl/intl.dart';
-import '../controller/dailyanalysis/dailyanalysiscontroller.dart';
+import 'package:printing/printing.dart';
+import 'package:screenshot/screenshot.dart';
+import '../controller/dailyanalysis/daily_analysis_controller.dart';
 import '../highcharts/line_charts.dart';
-import '../widgets/BoxwithIcon.dart';
-import '../widgets/CustomText.dart';
-import '../widgets/SideDrawer.dart';
+import '../pdf/pdf_helper_function.dart';
+import '../widgets/box_with_icon.dart';
+import '../widgets/custom_text.dart';
+import '../widgets/side_drawer.dart';
 
 class Dailyanalusic extends StatefulWidget {
   @override
@@ -16,6 +21,8 @@ class Dailyanalusic extends StatefulWidget {
 class _DailyanalusicState extends State<Dailyanalusic> {
   final DailyAnalysisController apiController =
       Get.put(DailyAnalysisController());
+  ScreenshotController screenshotController = ScreenshotController();
+  ScreenshotController screenshotController1 = ScreenshotController();
   DateTime _selectedDate = DateTime.now();
 
   @override
@@ -25,6 +32,20 @@ class _DailyanalusicState extends State<Dailyanalusic> {
     // TODO: implement initState
     super.initState();
   }
+  Future<void> generateCustomPdf() async {
+    try {
+      List<Uint8List> images = [];
+      Uint8List? image1 = await screenshotController.capture();
+      images.add(image1!); // Repeat for other widgets if necessary
+
+   //  String userName = await getUserName(); // Fetch the user's name from SharedPreferences
+
+      await PDFHelper.createCustomPdf(images, 'custom_document.pdf', 'ahmad');
+    } catch (e) {
+      print("Error generating custom PDF: $e");
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +60,11 @@ class _DailyanalusicState extends State<Dailyanalusic> {
               textColor: const Color(0xff002F46),
             ),
           ),
-          actions: const [
+          actions:  [
+            IconButton(
+              icon: Icon(Icons.print),
+              onPressed: (){},
+            ),
             BoxwithIcon(),
           ],
         ),
@@ -268,9 +293,12 @@ class _DailyanalusicState extends State<Dailyanalusic> {
             ),
           ),
 
-          LineChart(
-            allValues: allValues,
-          ),
+          Screenshot(
+            controller: screenshotController,
+            child: LineChart(
+              allValues: allValues,
+            ),
+          )
           //  _buildAllValuesText('All Values:', allValues),
         ],
       ),
@@ -307,6 +335,9 @@ class _DailyanalusicState extends State<Dailyanalusic> {
       ? '${(value / 1000).toStringAsFixed(2)}kW'
       : '${(value / 1000).toStringAsFixed(2)}kW';
 }
+
+
+
 
 // Row(
 // mainAxisAlignment: MainAxisAlignment.spaceBetween,

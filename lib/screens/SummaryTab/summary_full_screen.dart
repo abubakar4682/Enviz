@@ -7,8 +7,8 @@ import 'package:highcharts_demo/screens/SummaryTab/this_month.dart';
 import 'package:highcharts_demo/screens/SummaryTab/this_week.dart';
 
 
-import 'package:highcharts_demo/widgets/CustomText.dart';
-import 'package:highcharts_demo/widgets/SideDrawer.dart';
+import 'package:highcharts_demo/widgets/custom_text.dart';
+import 'package:highcharts_demo/widgets/side_drawer.dart';
 import 'package:highcharts_demo/widgets/switch_button.dart';
 import 'package:intl/intl.dart';
 

@@ -1,13 +1,13 @@
 import 'package:get/get.dart';
-import 'package:highcharts_demo/widgets/BoxwithIcon.dart';
-import 'package:highcharts_demo/widgets/CustomText.dart';
-import 'package:highcharts_demo/widgets/SideDrawer.dart';
+import 'package:highcharts_demo/widgets/box_with_icon.dart';
+import 'package:highcharts_demo/widgets/custom_text.dart';
+import 'package:highcharts_demo/widgets/side_drawer.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import 'highcharts/line_charts.dart';
+
 
 class ApiController extends GetxController {
   String firstApiUrl = 'http://203.135.63.22:8000/buildingmap?username=ppjiq';
@@ -3434,8 +3434,8 @@ class MyHomePage extends StatelessWidget {
 // // // import '../controller/datacontroller.dart';
 // // // import '../highcharts/stock_column.dart';
 // // // import '../pichart.dart';
-// // // import '../widgets/CustomText.dart';
-// // // import '../widgets/SideDrawer.dart';
+// // // import '../widgets/custom_text.dart';
+// // // import '../widgets/side_drawer.dart';
 // // // import '../widgets/switch_button.dart';
 // // //
 // // // class SummaryTab extends StatefulWidget {

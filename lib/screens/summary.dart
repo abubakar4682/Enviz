@@ -10,10 +10,8 @@ import '../controller/datacontroller.dart';
 import '../highcharts/WeekChart.dart';
 import '../highcharts/stock_column.dart';
 import '../pichart.dart';
-import '../sevenday.dart';
-import '../today.dart';
-import '../widgets/CustomText.dart';
-import '../widgets/SideDrawer.dart';
+import '../widgets/custom_text.dart';
+import '../widgets/side_drawer.dart';
 import '../widgets/switch_button.dart';
 
 class Summary extends StatefulWidget {

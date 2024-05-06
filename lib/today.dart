@@ -116,7 +116,7 @@ class _OrgChartScreenState extends State<OrgChartScreen> {
   Future<Map<String, dynamic>> fetchApiData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? storedUsername = prefs.getString('username');
-    final response = await http.get(Uri.parse('http://203.135.63.22:8000/buildingmap?username=$storedUsername'));
+    final response = await http.get(Uri.parse('http://203.135.63.47:8000/buildingmap?username=$storedUsername'));
     if (response.statusCode == 200) {
       return json.decode(response.body);
     } else {
