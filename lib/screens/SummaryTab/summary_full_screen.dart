@@ -7,8 +7,8 @@ import 'package:highcharts_demo/screens/SummaryTab/this_month.dart';
 import 'package:highcharts_demo/screens/SummaryTab/this_week.dart';
 
 
-import 'package:highcharts_demo/widgets/CustomText.dart';
-import 'package:highcharts_demo/widgets/SideDrawer.dart';
+import 'package:highcharts_demo/widgets/custom_text.dart';
+import 'package:highcharts_demo/widgets/side_drawer.dart';
 import 'package:highcharts_demo/widgets/switch_button.dart';
 import 'package:intl/intl.dart';
 
@@ -50,7 +50,7 @@ class _SummaryTabState extends State<SummaryTab> {
       appBar: AppBar(
         title: Center(
           child: CustomText(
-            texts: 'SummaryTab',
+            texts: 'Summary',
             textColor: const Color(0xff002F46),
           ),
         ),
@@ -66,6 +66,7 @@ class _SummaryTabState extends State<SummaryTab> {
         child: Column(
           children: [
             SwitchWidget(
+
               selectedIndex: selectedIndex,
               onToggle: (index) {
                 setState(() {

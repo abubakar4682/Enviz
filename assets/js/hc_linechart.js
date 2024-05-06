@@ -37,16 +37,25 @@ function jsHeatmapFunc(chartData, startDate, endDate) {
       title: null,
       reversed: true
     },
-    colorAxis: {
-      min: 0,
-      minColor: '#8B4513',
-      maxColor: '#F4A460',
-      stops: [
-        [0, '#8B4513'],
-        [0.5, '#CD853F'],
-        [1, '#F4A460']
-      ]
-    },
+   colorAxis: {
+     min: 0,
+     minColor: '#E8F5E9', // the lightest green color
+     maxColor: '#1B5E20', // the darkest green color
+     stops: [
+       [0, '#E8F5E9'],       // lightest green at 0%
+       [0.1, '#C8E6C9'],     // slightly darker shade at 10%
+       [0.2, '#A5D6A7'],     // and so on...
+       [0.3, '#81C784'],
+       [0.4, '#66BB6A'],
+       [0.5, '#4CAF50'],     // a medium green around the 50% mark
+       [0.6, '#43A047'],
+       [0.7, '#388E3C'],
+       [0.8, '#2E7D32'],
+       [0.9, '#1B5E20'],     // a darker shade before the darkest at 90%
+       [1, '#1B5E20']        // the darkest green at 100%
+     ]
+   },
+
     tooltip: {
       formatter: function () {
         var energyValue = (this.point.value / 1000).toFixed(2);

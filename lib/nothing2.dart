@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:highcharts_demo/widgets/StartingndEnding.dart';
+import 'package:highcharts_demo/widgets/starting_nd_ending.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:get/get.dart';

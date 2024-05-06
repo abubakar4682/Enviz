@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
 
-import '../screens/Historical.dart';
+import '../screens/historical.dart';
 
 import '../screens/Live.dart';
 import '../screens/SummaryTab/summary_full_screen.dart';
-import '../screens/dailyanalysi.dart';
+import '../screens/daily_analysi.dart';
 
-import '../screens/summary.dart';
 
-import '../summmer.dart';
-import '../today.dart';
 
 class BottomPage extends StatefulWidget {
   BottomPage({Key? key}) : super(key: key);
@@ -19,6 +16,7 @@ class BottomPage extends StatefulWidget {
 }
 
 class _BottomPageState extends State<BottomPage> {
+
   int currentIndex = 0;
   List<Widget> pages = [
     SummaryTab(),
@@ -42,7 +40,7 @@ class _BottomPageState extends State<BottomPage> {
         type: BottomNavigationBarType.fixed,
         onTap: onTapped,
         items: [
-          _buildNavigationBarItem('SummaryTab', 'assets/images/Overview.png', 0),
+          _buildNavigationBarItem('Summary', 'assets/images/Overview.png', 0),
           _buildNavigationBarItem('Live', 'assets/images/Historical.png', 1),
           _buildNavigationBarItem(
               'Historical', 'assets/images/Last 24 Hours.png', 2),
@@ -61,7 +59,7 @@ class _BottomPageState extends State<BottomPage> {
         imagePath,
         width: 30,
         height: 30,
-        color: currentIndex == index ? Colors.blue : Colors.grey,
+        color: currentIndex == index ? Color(0xff009F8D) : Colors.grey,
       ),
       backgroundColor:
           currentIndex == index ? Colors.lightBlueAccent : Colors.white,

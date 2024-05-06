@@ -56,11 +56,11 @@ class MyHomePageone extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('API Response'),
+        title: const Text('API Response'),
       ),
       body: Obx(() {
         if (dataController.firstApiResponse.isEmpty) {
-          return Center(child: CircularProgressIndicator());
+          return const Center(child: CircularProgressIndicator());
         } else if (dataController.firstApiResponse.containsKey("Main")) {
           return _buildUiForMain(dataController.firstApiResponse as Map<String, dynamic>);
         } else {
@@ -75,7 +75,7 @@ class MyHomePageone extends StatelessWidget {
   Widget _buildUiForMain(Map<String, dynamic> firstApiResponse) {
     return Obx(() {
       if (dataController.secondApiResponse.isEmpty) {
-        return Center(child: CircularProgressIndicator());
+        return const Center(child: CircularProgressIndicator());
       } else {
         List<double> sumsList = [];
         RxMap mainApiData = dataController.secondApiResponse;
@@ -161,11 +161,11 @@ class MyHomePageone extends StatelessWidget {
       children: [
         Text(
           title,
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         Text(
           'Value: $value',
-          style: TextStyle(fontSize: 18),
+          style: const TextStyle(fontSize: 18),
         ),
         Divider(),
       ],

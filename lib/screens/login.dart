@@ -3,9 +3,10 @@ import 'package:get/get.dart';
 import '../Theme/theme.dart';
 import '../Utils/colors.dart';
 import '../controller/Summary_Controller/Week_Data_Chart_Controller.dart';
+import '../controller/auth_controller/login_controller.dart';
 import '../controller/datacontroller.dart';
 import '../controller/summaryedController.dart';
-import '../widgets/Cutom_button.dart';
+import '../widgets/cutom_button.dart';
 
 class Login extends StatefulWidget {
   const Login({Key? key}) : super(key: key);
@@ -15,7 +16,7 @@ class Login extends StatefulWidget {
 }
 
 class _LoginState extends State<Login> {
-  final authController = Get.put(DataControllers());
+  final authController = Get.put(LoginControllers());
 
  // final summaryController = Get.put(SummaryysControllers());
 
@@ -98,7 +99,7 @@ class _LoginState extends State<Login> {
                   onPressed: () {
                     showForgotPasswordDialog(context);
                   },
-                  child: Text(
+                  child: const Text(
                     'Forgot Password?',
                     style: TextStyle(
                       color: Colors.blue,
@@ -140,7 +141,7 @@ class _LoginState extends State<Login> {
 class PasswordTextField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final authController = Get.find<DataControllers>();
+    final authController = Get.find<LoginControllers>();
 
     return Obx(() => TextField(
       onChanged: (value) => authController.passwordController.text = value,

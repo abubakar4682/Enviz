@@ -56,7 +56,7 @@ class _DataDisplayScreendsdState extends State<DataDisplayScreendsd> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Main_[kW] Data Display'),
+        title: const Text('Main_[kW] Data Display'),
       ),
       body: FutureBuilder<Map<String, List<String>>>(
         future: futureDataOrganized,
@@ -85,7 +85,7 @@ class _DataDisplayScreendsdState extends State<DataDisplayScreendsd> {
             return Text("${snapshot.error}");
           }
           // By default, show a loading spinner.
-          return CircularProgressIndicator();
+          return const CircularProgressIndicator();
         },
       ),
     );

@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-import '../controller/Live/LiveController.dart';
+import '../controller/Live/live_controller.dart';
 import '../controller/authcontroller/authcontroller.dart';
 import '../controller/datacontroller.dart';
 import '../highcharts/LiveChart.dart';

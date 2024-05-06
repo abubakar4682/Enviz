@@ -1,22 +1,23 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:high_chart/high_chart.dart';
+import 'package:screenshot/screenshot.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-import '../controller/historical/historicalcontroller.dart';
-
-import '../heatmap.dart';
+import '../controller/historical/historical_controller.dart';
 import '../itemapp.dart';
-import '../today.dart';
-import '../widgets/BoxwithIcon.dart';
-import '../widgets/CustomText.dart';
+import '../pdf/pdf_helper_function.dart';
+import '../widgets/box_with_icon.dart';
+import '../widgets/custom_text.dart';
 
-import '../widgets/SideDrawer.dart';
-import '../widgets/StartingndEnding.dart';
+import '../widgets/side_drawer.dart';
+
 
 class Historical extends StatefulWidget {
   const Historical({Key? key}) : super(key: key);
@@ -27,6 +28,9 @@ class Historical extends StatefulWidget {
 
 class _HistoricalState extends State<Historical> {
   final controller = Get.put(HistoricalController());
+  ScreenshotController screenshotController1 = ScreenshotController();
+  ScreenshotController screenshotController2 = ScreenshotController();
+  ScreenshotController screenshotController3 = ScreenshotController();
 
   String formatToKilo(double value) {
     if (value >= 1000) {
@@ -56,14 +60,44 @@ class _HistoricalState extends State<Historical> {
     controller.update();
 
     // Initialize _fetchDataTimer with a periodic Timer
-    _fetchDataTimer = Timer.periodic(Duration(minutes: 1), (Timer t) {
+    _fetchDataTimer = Timer.periodic(const Duration(minutes: 1), (Timer t) {
       _fetchAllData();
       // controller.kwData.clear();
     });
   }
+
+
+
+
+  Future<String> getUserName() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString('username') ?? 'Your Name';
+  }
+  Future<void> generateCustomPdf() async {
+    try {
+      List<Uint8List> images = [];
+
+      // Capture images and check for null
+      Uint8List? image1 = await screenshotController1.capture();
+      if (image1 != null) images.add(image1);
+
+
+
+      if (images.isEmpty) {
+        print("No images to add to PDF");
+        return;
+      }
+
+      String userName = await getUserName();  // Fetch the user's name from SharedPreferences
+      await PDFHelper.createCustomPdf(images, 'custom_document.pdf', userName);
+    } catch (e) {
+      print("Error generating custom PDF: $e");
+    }
+  }
+
+
   Future<void> _fetchAllData() async {
     try {
-    //  controller.kwData.clear(); // Clear existing data
 
     } catch (error) {
       print('Error fetching data: $error');
@@ -96,7 +130,11 @@ class _HistoricalState extends State<Historical> {
             textColor: const Color(0xff002F46),
           ),
         ),
-        actions: const [
+        actions:  [
+          IconButton(
+            icon: Icon(Icons.print),
+            onPressed: generateCustomPdf,
+          ),
           BoxwithIcon(),
         ],
       ),
@@ -146,7 +184,7 @@ class _HistoricalState extends State<Historical> {
                         children: [
                           Obx(() => Text(controller.startDate.value)),
                           IconButton(
-                            icon: Icon(
+                            icon: const Icon(
                               Icons.arrow_drop_down,
                               size: 30,
                             ),
@@ -253,11 +291,14 @@ class _HistoricalState extends State<Historical> {
               height: 20,
             ),
             // LineChartScreen(),
-
-            Padding(
-              padding: const EdgeInsets.only(left: 10),
-              child: LineChartScreentwo(),
-            )
+            Screenshot(
+              controller: screenshotController1,
+              child: LineChartScreentwo()
+            ),
+            // Padding(
+            //   padding: const EdgeInsets.only(left: 10),
+            //   child: LineChartScreentwo(),
+            // )
 
             //LineChartScreenexample(),
             // PolygonCustomPage(),

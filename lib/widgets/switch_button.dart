@@ -36,6 +36,7 @@ class SwitchWidget extends StatelessWidget {
               totalSwitches: 2,
               activeFgColor: Colors.white,
               inactiveBgColor: Colors.white,
+              activeBgColor: [Color(0xff009F8D)],
               inactiveFgColor: Colors.grey[900],
               labels: ['Today', 'This Month'],
               onToggle: onToggle,
