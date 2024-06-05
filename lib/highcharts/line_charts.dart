@@ -38,11 +38,11 @@ class LineChart extends StatelessWidget {
     data.writeln("      text: 'Power'");
     data.writeln("    }");
     data.writeln("  },");
-    data.writeln("  tooltip: {");
-    data.writeln("    pointFormatter: function() {");
-    data.writeln("      var value = this.y / 1000;");
-    data.writeln("      value = Highcharts.numberFormat(value, 1) + ' kWh';");
-    data.writeln("      return 'Power: ' + value;");
+      data.writeln("  tooltip: {");
+      data.writeln("    pointFormatter: function() {");
+      data.writeln("      var value = this.y / 1000;");
+      data.writeln("      value = Highcharts.numberFormat(value, 1) + ' kWh';");
+      data.writeln("      return 'Power: ' + value;");
     data.writeln("    }");
     data.writeln("  },");
     data.writeln("  xAxis: {");

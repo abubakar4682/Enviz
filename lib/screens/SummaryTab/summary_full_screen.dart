@@ -1,4 +1,3 @@
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -6,23 +5,17 @@ import 'package:get/get_core/src/get_main.dart';
 import 'package:highcharts_demo/screens/SummaryTab/this_month.dart';
 import 'package:highcharts_demo/screens/SummaryTab/this_week.dart';
 
-
 import 'package:highcharts_demo/widgets/custom_text.dart';
 import 'package:highcharts_demo/widgets/side_drawer.dart';
 import 'package:highcharts_demo/widgets/switch_button.dart';
 import 'package:intl/intl.dart';
 
+import '../../JS_Web_View/js_coloum_web.dart';
+import '../../JS_Web_View/pie_chart.dart';
 import '../../controller/Summary_Controller/max_avg_min_controller.dart';
 
-
-
-
-
 class SummaryTab extends StatefulWidget {
-
-
   @override
-
   State<SummaryTab> createState() => _SummaryTabState();
 }
 
@@ -32,17 +25,16 @@ class _SummaryTabState extends State<SummaryTab> {
 
   @override
   void initState() {
-    summaryController. fetchFirstApiData();
-    summaryController.fetchSecondApiData();
-
+    summaryController.fetchData();
 
     super.initState();
-
   }
+
   @override
   void dispose() {
     super.dispose();
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -66,7 +58,6 @@ class _SummaryTabState extends State<SummaryTab> {
         child: Column(
           children: [
             SwitchWidget(
-
               selectedIndex: selectedIndex,
               onToggle: (index) {
                 setState(() {
@@ -79,11 +70,11 @@ class _SummaryTabState extends State<SummaryTab> {
               child: Column(
                 children: [
 
+
                   Padding(
                     padding: const EdgeInsets.only(left: 10, right: 10),
                     child: Row(
                       children: [
-
                         Expanded(
                           flex: 1,
                           child: Container(
@@ -101,9 +92,9 @@ class _SummaryTabState extends State<SummaryTab> {
                                 children: [
                                   Row(
                                     mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
+                                        MainAxisAlignment.spaceBetween,
                                     crossAxisAlignment:
-                                    CrossAxisAlignment.start,
+                                        CrossAxisAlignment.start,
                                     children: [
                                       CustomText(
                                         texts: 'cost of usage',
@@ -121,16 +112,22 @@ class _SummaryTabState extends State<SummaryTab> {
                                     ],
                                   ),
                                   Obx(() {
-                                    final firstApiData = summaryController.firstApiData!.value;
-                                    if (firstApiData == null || firstApiData.isEmpty) {
+                                    final firstApiData =
+                                        summaryController.firstApiData!.value;
+                                    if (firstApiData == null ||
+                                        firstApiData.isEmpty) {
                                       return CircularProgressIndicator();
-                                    }else {
+                                    } else {
                                       if (firstApiData.containsKey("Main")) {
-                                        return _buildUiForMainForPrice(firstApiData);
+                                        return _buildUiForMainForPrice(
+                                            firstApiData);
                                       } else {
-                                        List<String> modifiedKeys =
-                                        firstApiData.keys.map((key) => '$key\_[kW]').toList();
-                                        return _buildUiForOtherForPrice(modifiedKeys);
+                                        List<String> modifiedKeys = firstApiData
+                                            .keys
+                                            .map((key) => '$key\_[kW]')
+                                            .toList();
+                                        return _buildUiForOtherForPrice(
+                                            modifiedKeys);
                                       }
                                     }
                                   }),
@@ -163,9 +160,9 @@ class _SummaryTabState extends State<SummaryTab> {
                                 children: [
                                   Row(
                                     mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
+                                        MainAxisAlignment.spaceBetween,
                                     crossAxisAlignment:
-                                    CrossAxisAlignment.start,
+                                        CrossAxisAlignment.start,
                                     children: [
                                       CustomText(
                                         texts: 'power',
@@ -183,22 +180,25 @@ class _SummaryTabState extends State<SummaryTab> {
                                     ],
                                   ),
                                   Obx(() {
-                                    final firstApiData = summaryController.firstApiData!.value;
-                                    if (firstApiData == null || firstApiData.isEmpty) {
+                                    final firstApiData =
+                                        summaryController.firstApiData?.value;
+                                    if (firstApiData == null ||
+                                        firstApiData.isEmpty) {
                                       return CircularProgressIndicator();
-                                    }else {
-                                      if (firstApiData.containsKey("Main")) {
-                                        return _buildUiForMain(firstApiData);
-                                      } else {
-                                        List<String> modifiedKeys =
-                                        firstApiData.keys.map((key) => '$key\_[kW]').toList();
-                                        return _buildUiForOther();
-                                      }
+                                    }
+                                    if (firstApiData.containsKey("Main")) {
+                                      return _buildUiForMain(firstApiData);
+                                    } else {
+                                      List<String> modifiedKeys = firstApiData
+                                          .keys
+                                          .map((key) => '$key\_[kW]')
+                                          .toList();
+                                      return _buildUiForOther(modifiedKeys);
                                     }
                                   }),
                                   CustomText(
                                     texts:
-                                    'as of ${DateFormat('HH:mm').format(DateTime.now())}',
+                                        'as of ${DateFormat('HH:mm').format(DateTime.now())}',
                                     textColor: const Color(0xb2ffffff),
                                   ),
                                 ],
@@ -206,8 +206,6 @@ class _SummaryTabState extends State<SummaryTab> {
                             ),
                           ),
                         ),
-
-
                       ],
                     ),
                   ),
@@ -216,23 +214,14 @@ class _SummaryTabState extends State<SummaryTab> {
                   ),
                   Container(
                       height: MediaQuery.of(context).size.height,
-                      child: DataView()
-                  ),
-
-
-
-
-
+                      child: DataView()),
                 ],
               ),
             ),
             Visibility(
               visible: selectedIndex == 1,
               child: Column(
-                children: [
-                  DataViewForThisMonth()
-
-                ],
+                children: [DataViewForThisMonth()],
               ),
             ),
           ],
@@ -249,60 +238,29 @@ class _SummaryTabState extends State<SummaryTab> {
       } else {
         List<double> sumsList = [];
         for (int i = 0; i < secondApiData["Main_[kW]"].length; i++) {
-          double sum = summaryController.parseDouble(secondApiData["Main_[kW]"][i]);
+          double sum =
+              summaryController.parseDouble(secondApiData["Main_[kW]"][i]);
           sumsList.add(sum);
         }
 
+        double lastindexvalue = summaryController.getCurrentHourValue(sumsList);
 
-        double lastindexvalue = summaryController.getLastIndexValue(sumsList);
-
-        return Text("Rs ${summaryController.formatValued(lastindexvalue*70)}", style: const TextStyle(
-          fontSize: 24,
-          fontWeight: FontWeight.w700,
-          height: 1.5,
-          color: Colors.white,
-        ),);
+        return Text(
+          "Rs ${summaryController.formatValued(lastindexvalue * 70)}",
+          style: const TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.w700,
+            height: 1.5,
+            color: Colors.white,
+          ),
+        );
       }
     });
   }
-  Widget _buildUiForOtherForPrice(List<String> modifiedKeys) {
-    return Obx(() {
-      final secondApiData = summaryController.secondApiData!.value;
-      if (secondApiData == null || secondApiData.isEmpty) {
-        return CircularProgressIndicator();
-      } else {
-        List<double> sumsList = [];
-        // for (int i = 0; i < secondApiData['1st Floor_[kW]'].length; i++) {
-        //   double sum =
-        //       summaryController.parseDouble(secondApiData['1st Floor_[kW]'][i]) +
-        //           summaryController.parseDouble(secondApiData['Ground Floor_[kW]'][i]);
-        //   sumsList.add(sum);
-        // }
-        if (summaryController.result.isNotEmpty) {
-          int lengthOfData = secondApiData[summaryController.result.first].length;
-          for (int i = 0; i < lengthOfData; i++) {
-            double sum = 0;
-            for (String key in summaryController.result) {
-              sum += summaryController.parseDouble(secondApiData[key][i]);
-            }
-            sumsList.add(sum);
-          }
-        }
 
 
-        double lastindexvalue = summaryController.getLastIndexValue(sumsList);
 
-        (summaryController.lastMainKWValue * 70 / 1000).toStringAsFixed(2);
 
-        return Text("Rs ${summaryController.formatValued(lastindexvalue*70)}", style: const TextStyle(
-          fontSize: 24,
-          fontWeight: FontWeight.w700,
-          height: 1.5,
-          color: Colors.white,
-        ),);
-      }
-    });
-  }
   Widget _buildUiForMain(Map<String, dynamic> firstApiResponse) {
     return Obx(() {
       final secondApiData = summaryController.secondApiData!.value;
@@ -311,22 +269,26 @@ class _SummaryTabState extends State<SummaryTab> {
       } else {
         List<double> sumsList = [];
         for (int i = 0; i < secondApiData["Main_[kW]"].length; i++) {
-          double sum = summaryController.parseDouble(secondApiData["Main_[kW]"][i]);
+          double sum =
+              summaryController.parseDouble(secondApiData["Main_[kW]"][i]);
           sumsList.add(sum);
         }
 
+        double lastindexvalue = summaryController.getCurrentHourValue(sumsList);
 
-        double lastindexvalue = summaryController.getLastIndexValue(sumsList);
-
-        return Text("${summaryController.formatValued(lastindexvalue)}kW", style: const TextStyle(
-          fontSize: 24,
-          fontWeight: FontWeight.w700,
-          height: 1.5,
-          color: Colors.white,
-        ),);
+        return Text(
+          "${summaryController.formatValued(lastindexvalue)}kW",
+          style: const TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.w700,
+            height: 1.5,
+            color: Colors.white,
+          ),
+        );
       }
     });
   }
+
   // Widget _buildUiForOther(List<String> modifiedKeys) {
   //   return Obx(() {
   //     final secondApiData = summaryController.secondApiData!.value;
@@ -355,36 +317,70 @@ class _SummaryTabState extends State<SummaryTab> {
   //     }
   //   });
   // }
-  Widget _buildUiForOther() {
+  Widget _buildUiForOther(List<String> keys) {
+    return Obx(() {
+      final secondApiData = summaryController.secondApiData?.value;
+      if (secondApiData == null || secondApiData.isEmpty) {
+        return CircularProgressIndicator();
+      }
+      List<double> sumsList = [];
+      if (summaryController.result.isNotEmpty) {
+        int lengthOfData = secondApiData[summaryController.result.first]?.length ?? 0;
+        for (int i = 0; i < lengthOfData; i++) {
+          double sum = 0;
+          for (String key in keys) {
+            sum += summaryController.parseDouble(secondApiData[key]?[i] ?? 0);
+          }
+          sumsList.add(sum);
+        }
+      }
+
+      double lastIndexValue = summaryController.getCurrentHourValue(sumsList);
+      return Text("${summaryController.formatValued(lastIndexValue)}kW", style: const TextStyle(
+        fontSize: 24,
+        fontWeight: FontWeight.w700,
+        color: Colors.white,
+      ));
+    });
+  }
+  Widget _buildUiForOtherForPrice(List<String> modifiedKeys) {
     return Obx(() {
       final secondApiData = summaryController.secondApiData!.value;
       if (secondApiData == null || secondApiData.isEmpty) {
         return CircularProgressIndicator();
       } else {
         List<double> sumsList = [];
-        // Use dynamically captured keys
+        // for (int i = 0; i < secondApiData['1st Floor_[kW]'].length; i++) {
+        //   double sum =
+        //       summaryController.parseDouble(secondApiData['1st Floor_[kW]'][i]) +
+        //           summaryController.parseDouble(secondApiData['Ground Floor_[kW]'][i]);
+        //   sumsList.add(sum);
+        // }
         if (summaryController.result.isNotEmpty) {
-          int lengthOfData = secondApiData[summaryController.result.first].length;
+          int lengthOfData = secondApiData[summaryController.result.first]?.length ?? 0;
           for (int i = 0; i < lengthOfData; i++) {
             double sum = 0;
-            for (String key in summaryController.result) {
-              sum += summaryController.parseDouble(secondApiData[key][i]);
+            for (String key in modifiedKeys) {
+              sum += summaryController.parseDouble(secondApiData[key]?[i] ?? 0);
             }
             sumsList.add(sum);
           }
         }
 
-        double lastindexvalue = summaryController.getLastIndexValue(sumsList);
+        double lastindexvalue = summaryController.getCurrentHourValue(sumsList);
 
-        // Assuming getLastIndexValue and formatValued are methods that you have defined in your controller
-        return Text("${summaryController.formatValued(lastindexvalue)}kW", style: const TextStyle(
-          fontSize: 24,
-          fontWeight: FontWeight.w700,
-          height: 1.5,
-          color: Colors.white,
-        ));
+        (summaryController.lastMainKWValue * 70 / 1000).toStringAsFixed(2 );
+
+        return Text(
+          "Rs ${summaryController.formatValued(lastindexvalue * 70)}",
+          style: const TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.w700,
+            height: 1.5,
+            color: Colors.white,
+          ),
+        );
       }
     });
   }
-
 }

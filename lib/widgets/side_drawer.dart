@@ -4,8 +4,13 @@ import 'package:get/get.dart';
 import 'package:highcharts_demo/screens/splashe_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../JS_Web_View/View/View_for_month.dart';
+import '../JS_Web_View/js_coloum_web.dart';
+import '../controller/Live/live_controller.dart';
 import '../controller/NotificationController/notification_time.dart';
 import '../controller/NotificationController/toggle_controller.dart';
+import '../controller/Summary_Controller/pie_chart_for_this_month.dart';
+import '../controller/Summary_Controller/pie_chart_this_week.dart';
 import '../controller/auth_controller/login_controller.dart';
 import '../controller/datacontroller.dart';
 import '../controller/historical/historical_controller.dart';
@@ -114,8 +119,31 @@ class Sidedrawer extends StatelessWidget {
             leading: const Icon(Icons.logout, color: Color(0xff009F8D)),
             title: const Text('Logout'),
             onTap: () async {
+              final MonthColoumDataControllerss monthColoumDataController=Get.put(MonthColoumDataControllerss());
+              monthColoumDataController.resetController();
+
+              Get.delete<MonthDataControllerForPieChart>();
+
+              final MonthDataControllerForPieChart monthDataControllerForPieChart =
+              Get.put(MonthDataControllerForPieChart());
+              monthDataControllerForPieChart.clearUserData();
+
+              Get.delete<MonthColoumDataControllerss>();
               final HistoricalController historicalController =
                   Get.put(HistoricalController());
+              final WeekDataControllerForPieChart weekDataControllerForPieChart =
+              Get.put(WeekDataControllerForPieChart());
+              weekDataControllerForPieChart.logout();
+              final LiveDataControllers LiveControler =
+              Get.put(LiveDataControllers());
+              final WeekDataControllerss coloumchart =
+              Get.put(WeekDataControllerss());
+              Get.delete<WeekDataControllerForPieChart>();
+              Get.delete<WeekDataControllerss>();
+              coloumchart.resetController();
+              weekDataControllerForPieChart.clearUserData();
+
+
               final DataControllers loginController =
                   Get.put(DataControllers());
               final WeekDataController weekDataController =
@@ -126,6 +154,8 @@ class Sidedrawer extends StatelessWidget {
                   Get.put(LoginControllers());
               final NotificationController notificationController =
                   Get.put(NotificationController());
+
+              Get.delete<LiveDataControllers>();
               Get.delete<LoginControllers>();
               Get.delete<HistoricalController>();
               Get.delete<

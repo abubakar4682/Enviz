@@ -30,7 +30,7 @@ class RegisterRepository {
     required String start,
     required String end,
   }) async {
-    final apiUrl = 'http://203.135.63.22:8000/data?username=$username&mode=$mode&start=$start&end=$end';
+    final apiUrl = 'http://203.135.63.47:8000/data?username=$username&mode=$mode&start=$start&end=$end';
 
     try {
       final response = await _apiServices.getApi(apiUrl);

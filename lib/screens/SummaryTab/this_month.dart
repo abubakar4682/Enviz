@@ -7,6 +7,8 @@ import 'package:get/get.dart';
 import 'package:high_chart/high_chart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../JS_Web_View/View/View_for_month.dart';
+import '../../JS_Web_View/View/pie_chart_for_month.dart';
 
 class DataControllerForThisMonth extends GetxController {
   var isLoading = true.obs;
@@ -22,11 +24,13 @@ class DataControllerForThisMonth extends GetxController {
     super.onInit();
     fetchChartData();
   }
+
   void resetController() {
-    isLoading(true);  // Assuming default is loading
-    data(<String, List<double>>{});  // Clear all data
-    errorMessage('');  // Clear any error messages
-    startDate = DateTime.now().subtract(Duration(days: 1));  // Reset the start date
+    isLoading(true); // Assuming default is loading
+    data(<String, List<double>>{}); // Clear all data
+    errorMessage(''); // Clear any error messages
+    startDate =
+        DateTime.now().subtract(Duration(days: 1)); // Reset the start date
   }
 
   Future<void> fetchData() async {
@@ -34,15 +38,19 @@ class DataControllerForThisMonth extends GetxController {
     String? storedUsername = prefs.getString('username');
     isLoading(true);
     DateTime now = DateTime.now();
-    DateTime endDate = DateTime(now.year, now.month, now.day); // Ensures the time is set to 00:00:00 of today
+    DateTime endDate = DateTime(now.year, now.month,
+        now.day); // Ensures the time is set to 00:00:00 of today
     // Set startDate to the first day of the current month
     DateTime startDate = DateTime(now.year, now.month, 1);
 
     // Format the dates to 'YYYY-MM-DD' format
-    String formattedStartDate = "${startDate.year}-${startDate.month.toString().padLeft(2, '0')}-${startDate.day.toString().padLeft(2, '0')}";
-    String formattedEndDate = "${endDate.year}-${endDate.month.toString().padLeft(2, '0')}-${endDate.day.toString().padLeft(2, '0')}";
+    String formattedStartDate =
+        "${startDate.year}-${startDate.month.toString().padLeft(2, '0')}-${startDate.day.toString().padLeft(2, '0')}";
+    String formattedEndDate =
+        "${endDate.year}-${endDate.month.toString().padLeft(2, '0')}-${endDate.day.toString().padLeft(2, '0')}";
 
-    final Uri uri = Uri.parse('http://203.135.63.47:8000/data?username=$storedUsername&mode=hour&start=$formattedStartDate&end=$formattedEndDate');
+    final Uri uri = Uri.parse(
+        'http://203.135.63.47:8000/data?username=$storedUsername&mode=hour&start=$formattedStartDate&end=$formattedEndDate');
 
     try {
       final response = await http.get(uri);
@@ -62,7 +70,10 @@ class DataControllerForThisMonth extends GetxController {
             }).toList();
             processedData[key] = [];
             for (int i = 0; i < listValues.length; i += 24) {
-              processedData[key]!.add(listValues.sublist(i, i + 24 > listValues.length ? listValues.length : i + 24).reduce((a, b) => a + b));
+              processedData[key]!.add(listValues
+                  .sublist(i,
+                      i + 24 > listValues.length ? listValues.length : i + 24)
+                  .reduce((a, b) => a + b));
             }
           }
         });
@@ -78,10 +89,6 @@ class DataControllerForThisMonth extends GetxController {
       isLoading(false);
     }
   }
-
-
-
-
 
   void fetchChartData() async {
     errorMessage.value = '';
@@ -101,21 +108,27 @@ class DataControllerForThisMonth extends GetxController {
       return;
     }
     DateTime now = DateTime.now();
-    DateTime endDate = DateTime(now.year, now.month, now.day); // Ensures the time is set to 00:00:00 of today
+    DateTime endDate = DateTime(now.year, now.month,
+        now.day); // Ensures the time is set to 00:00:00 of today
     // Set startDate to the first day of the current month
     DateTime startDate = DateTime(now.year, now.month, 1);
-    String formattedStartDate = "${startDate.year}-${startDate.month.toString().padLeft(2, '0')}-${startDate.day.toString().padLeft(2, '0')}";
-    String formattedEndDate = "${endDate.year}-${endDate.month.toString().padLeft(2, '0')}-${endDate.day.toString().padLeft(2, '0')}";
+    String formattedStartDate =
+        "${startDate.year}-${startDate.month.toString().padLeft(2, '0')}-${startDate.day.toString().padLeft(2, '0')}";
+    String formattedEndDate =
+        "${endDate.year}-${endDate.month.toString().padLeft(2, '0')}-${endDate.day.toString().padLeft(2, '0')}";
 
     try {
       isLoading(true);
-      final response = await http.get(Uri.parse('http://203.135.63.47:8000/data?username=$storedUsername&mode=day&start=$formattedStartDate&end=$formattedEndDate'));
+      final response = await http.get(Uri.parse(
+          'http://203.135.63.47:8000/data?username=$storedUsername&mode=day&start=$formattedStartDate&end=$formattedEndDate'));
       if (response.statusCode == 200) {
         var jsonResponse = json.decode(response.body);
         chartData(parseChartData(jsonResponse));
-        pieChartData(parsePieChartData(jsonResponse));  // Generate pie chart data
+        pieChartData(
+            parsePieChartData(jsonResponse)); // Generate pie chart data
       } else {
-        errorMessage.value = 'Failed to load data with status code: ${response.statusCode}';
+        errorMessage.value =
+            'Failed to load data with status code: ${response.statusCode}';
         hasError(true);
         throw Exception('Failed to load chart data');
       }
@@ -128,12 +141,17 @@ class DataControllerForThisMonth extends GetxController {
   }
 
   String parseChartData(Map<String, dynamic> jsonResponse) {
-    List<String> categories = List<String>.from(jsonResponse['data']['Date & Time']);
+    List<String> categories =
+        List<String>.from(jsonResponse['data']['Date & Time']);
     List<dynamic> series = [];
     jsonResponse['data'].forEach((key, value) {
       if (key.endsWith('_[kW]')) {
-        List convertedData = (value as List).map((item) => item is int ? item.toDouble() : item / 1000).toList();
-        series.add({'name': key.replaceAll('_[kW]', ''), 'data': convertedData,
+        List convertedData = (value as List)
+            .map((item) => item is int ? item.toDouble() : item / 1000)
+            .toList();
+        series.add({
+          'name': key.replaceAll('_[kW]', ''),
+          'data': convertedData,
           "visible": !(key.startsWith('Main') || key.startsWith('Generator')),
         });
       }
@@ -171,7 +189,8 @@ class DataControllerForThisMonth extends GetxController {
     // Calculate total to compute percentages
     jsonResponse['data'].forEach((key, value) {
       if (key.endsWith('_[kW]')) {
-        double sum = (value as List).fold(0, (prev, item) => prev + (item / 1000));
+        double sum =
+            (value as List).fold(0, (prev, item) => prev + (item / 1000));
         total += sum;
       }
     });
@@ -179,12 +198,13 @@ class DataControllerForThisMonth extends GetxController {
     // Construct the data array for the pie chart
     jsonResponse['data'].forEach((key, value) {
       if (key.endsWith('_[kW]')) {
-        double sum = (value as List).fold(0, (prev, item) => prev + (item / 1000));
+        double sum =
+            (value as List).fold(0, (prev, item) => prev + (item / 1000));
         double percentage = (sum / total) * 100;
         data.add({
           'name': key.replaceAll('_[kW]', ''),
           'y': sum,
-          'percentage': percentage  // Store percentage for display
+          'percentage': percentage // Store percentage for display
         });
       }
     });
@@ -205,112 +225,90 @@ class DataControllerForThisMonth extends GetxController {
             // Display only percentage outside the slices
             'format': '{point.percentage:.1f}%',
             'style': {
-              'color': 'black'  // Change as needed to fit your app's theme
+              'color': 'black' // Change as needed to fit your app's theme
             }
           },
-          'showInLegend': true  // Ensure the legend is shown
+          'showInLegend': true // Ensure the legend is shown
         }
       },
-      'series': [{
-        'name': 'Energy',
-        'colorByPoint': true,
-        'data': data
-      }]
+      'series': [
+        {'name': 'Energy', 'colorByPoint': true, 'data': data}
+      ]
     });
   }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 }
-
-
-
-
-
-
-
-
-
-
-
-
 
 class DataViewForThisMonth extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final DataControllerForThisMonth controller = Get.put(DataControllerForThisMonth());
+    final DataControllerForThisMonth controller =
+        Get.put(DataControllerForThisMonth());
 
-    return Obx(() {
-      if (controller.isLoading.isTrue) {
-        return Center(child: CircularProgressIndicator());
-      } else if (controller.hasError.isTrue) {
-        return Center(child: Text('Error loading data.'));
-      }
-      else if (controller.errorMessage.isNotEmpty) {
-        return Center(child: Text(controller.errorMessage.value, style: TextStyle(color: Colors.red)));
-      } else {
-        return SingleChildScrollView(
-          child: Column(
-            children: [
-              HighCharts(
-                loader: const SizedBox(
-                  width: 50,
-                  height: 50,
-                  child: Center(
-                    child: Text('Loading...'),
-                  ),
-                ),
-                size: Size(MediaQuery.of(context).size.width, 400),
-                data: controller.chartData.value,
-                scripts: const [
-                  "https://code.highcharts.com/highcharts.js",
-                  "https://code.highcharts.com/modules/exporting.js",
-                  "https://code.highcharts.com/modules/export-data.js",
-                  "https://code.highcharts.com/highcharts-more.js",
-                  "https://code.highcharts.com/modules/accessibility.js",
-                ],
-              ),
-              SizedBox(height: 20),
-              HighCharts(
-                loader: const SizedBox(
-                  width: 50,
-                  height: 50,
-                  child: Center(
-                    child: Text('Loading...'),
-                  ),
-                ),
-                size: Size(MediaQuery.of(context).size.width, 400),
-                data: controller.pieChartData.value,
-                scripts: const [
-                  "https://code.highcharts.com/highcharts.js",
-                  "https://code.highcharts.com/modules/exporting.js",
-                  "https://code.highcharts.com/modules/export-data.js",
-                  "https://code.highcharts.com/highcharts-more.js",
-                  "https://code.highcharts.com/modules/accessibility.js",
-                ],
-              ),
-            ],
-          ),
-        );
-      }
-    });
+    return Column(
+      children: [
+        SizedBox(height: 400, child: ColumnChartScreenForMonth()),
+        SizedBox(
+          height: 400,
+          child: PieChartScreenForMonth(),
+        ),
+        // Obx(() {
+        //   if (controller.isLoading.isTrue) {
+        //     return Center(child: CircularProgressIndicator());
+        //   } else if (controller.hasError.isTrue) {
+        //     return Center(child: Text('Error loading data.'));
+        //   } else if (controller.errorMessage.isNotEmpty) {
+        //     return Center(
+        //         child: Text(controller.errorMessage.value,
+        //             style: TextStyle(color: Colors.red)));
+        //   } else {
+        //     return HighCharts(
+        //       loader: const SizedBox(
+        //         width: 50,
+        //         height: 50,
+        //         child: Center(
+        //           child: Text('Loading...'),
+        //         ),
+        //       ),
+        //       size: Size(MediaQuery.of(context).size.width, 400),
+        //       data: controller.pieChartData.value,
+        //       scripts: const [
+        //         "https://code.highcharts.com/highcharts.js",
+        //         "https://code.highcharts.com/modules/exporting.js",
+        //         "https://code.highcharts.com/modules/export-data.js",
+        //         "https://code.highcharts.com/highcharts-more.js",
+        //         "https://code.highcharts.com/modules/accessibility.js",
+        //       ],
+        //     );
+        //
+        //     //
+        //     //   Column(
+        //     //   children: [
+        //     //     // HighCharts(
+        //     //     //   loader: const SizedBox(
+        //     //     //     width: 50,
+        //     //     //     height: 50,
+        //     //     //     child: Center(
+        //     //     //       child: Text('Loading...'),
+        //     //     //     ),
+        //     //     //   ),
+        //     //     //   size: Size(MediaQuery.of(context).size.width, 400),
+        //     //     //   data: controller.chartData.value,
+        //     //     //   scripts: const [
+        //     //     //     "https://code.highcharts.com/highcharts.js",
+        //     //     //     "https://code.highcharts.com/modules/exporting.js",
+        //     //     //     "https://code.highcharts.com/modules/export-data.js",
+        //     //     //     "https://code.highcharts.com/highcharts-more.js",
+        //     //     //     "https://code.highcharts.com/modules/accessibility.js",
+        //     //     //   ],
+        //     //     // ),
+        //     //     const SizedBox(height: 20),
+        //     //
+        //     //   ],
+        //     // );
+        //   }
+        // }),
+      ],
+    );
   }
 
   String _prepareChartData(Map<String, List<double>> data, DateTime startDate) {
@@ -357,17 +355,18 @@ class DataViewForThisMonth extends StatelessWidget {
     });
   }
 
-
   String _preparePieChartData(Map<String, List<double>> data) {
     List<Map<String, dynamic>> seriesData = [];
     double total = data.values.expand((i) => i).reduce((a, b) => a + b);
 
     data.forEach((key, value) {
-      double sum = value.fold(0, (previousValue, element) => previousValue + element);
+      double sum =
+          value.fold(0, (previousValue, element) => previousValue + element);
       seriesData.add({
         "name": key.replaceAll('_[kW]', ''),
         "y": sum,
-        "percentage": (sum / total) * 100 // Calculate the percentage for the legend
+        "percentage": (sum / total) * 100
+        // Calculate the percentage for the legend
       });
     });
 
@@ -410,9 +409,7 @@ class DataViewForThisMonth extends StatelessWidget {
     }
   ''';
   }
-
 }
-
 
 // import 'package:get/get.dart';
 //

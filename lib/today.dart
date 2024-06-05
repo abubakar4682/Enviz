@@ -6,6 +6,9 @@ import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+
+import 'database/db_for_orgChart.dart';
+
 class LineChartScreen extends StatefulWidget {
   final Map<String, List<String>> data;
 
@@ -83,6 +86,7 @@ class OrgChartScreen extends StatefulWidget {
 
 class _OrgChartScreenState extends State<OrgChartScreen> {
   late final WebViewController webViewController;
+  final DBHelper dbHelper = DBHelper();
 
   @override
   void initState() {
@@ -95,7 +99,6 @@ class _OrgChartScreenState extends State<OrgChartScreen> {
       ..loadFlutterAsset('assets/js/org_chart_index.html')
       ..setNavigationDelegate(NavigationDelegate(
         onPageStarted: (url) {
-          // Enable debugging if needed
           if (webViewController.platform is AndroidWebViewController) {
             AndroidWebViewController.enableDebugging(kDebugMode);
           }
@@ -106,9 +109,18 @@ class _OrgChartScreenState extends State<OrgChartScreen> {
           }
         },
         onPageFinished: (url) async {
-          final responseData = await fetchApiData();
-          final encodedData = jsonEncode(responseData);
-          webViewController.runJavaScript('initializeOrgChart($encodedData);');
+          try {
+            final responseData = await fetchApiData();
+            final encodedData = jsonEncode(responseData);
+            webViewController.runJavaScript('initializeOrgChart($encodedData);');
+            await dbHelper.insertData(encodedData);
+          } catch (error) {
+            print('Error initializing org chart: $error');
+            final offlineData = await dbHelper.fetchData();
+            if (offlineData != null) {
+              webViewController.runJavaScript('initializeOrgChart($offlineData);');
+            }
+          }
         },
       ));
   }
@@ -120,7 +132,7 @@ class _OrgChartScreenState extends State<OrgChartScreen> {
     if (response.statusCode == 200) {
       return json.decode(response.body);
     } else {
-      throw Exception('Failed to load API data');
+      throw Exception('Failed to load API data with status code: ${response.statusCode}');
     }
   }
 
@@ -131,18 +143,13 @@ class _OrgChartScreenState extends State<OrgChartScreen> {
         title: Text("Distribution Map"),
       ),
       body: FutureBuilder<Map<String, dynamic>>(
-        future: fetchApiData(), // Execute the fetchApiData method
+        future: fetchApiData(),
         builder: (BuildContext context, AsyncSnapshot<Map<String, dynamic>> snapshot) {
-          // Check connection state
           if (snapshot.connectionState == ConnectionState.waiting) {
-            // Return a circular progress indicator if data is still being fetched
             return Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
-            // Return an error message if an error occurred
-            return Center(child: Text("Error fetching data"));
+            return Center(child: Text("Error: ${snapshot.error}"));
           } else {
-            // Once the data is fetched, display the WebView
-            // Since data is fetched beforehand, you can directly pass it to your JavaScript initialization if needed
             return SizedBox(
               child: WebViewWidget(
                 controller: webViewController,
@@ -154,3 +161,5 @@ class _OrgChartScreenState extends State<OrgChartScreen> {
     );
   }
 }
+
+

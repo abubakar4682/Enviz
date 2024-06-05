@@ -1,12 +1,13 @@
 import 'package:connectivity/connectivity.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:high_chart/high_chart.dart';
-import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../JS_Web_View/js_coloum_web.dart';
+import '../../JS_Web_View/pie_chart.dart';
 
 class WeekDataController extends GetxController {
   var isLoading = true.obs;
@@ -112,7 +113,7 @@ class WeekDataController extends GetxController {
     errorMessage.value = '';
     var connectivityResult = await Connectivity().checkConnectivity();
     if (connectivityResult == ConnectivityResult.none) {
-      errorMessage.value = "No internet connection available.";
+      errorMessage.value = "No internet connection availables.";
       isLoading(false);
       return;
     }
@@ -253,60 +254,72 @@ class DataView extends StatelessWidget {
   Widget build(BuildContext context) {
     final WeekDataController controller = Get.put(WeekDataController());
 
-    return  Obx(() {
-      if (controller.isLoading.isTrue) {
-        return Center(child: CircularProgressIndicator());
-      } else if (controller.hasError.isTrue) {
-        return Center(child: Text('Error loading data.'));
-      }
-      else if (controller.errorMessage.isNotEmpty) {
-        return Center(child: Text(controller.errorMessage.value, style: TextStyle(color: Colors.red)));
-      } else {
-        return SingleChildScrollView(
-          child: Column(
-            children: [
-              HighCharts(
-                loader: const SizedBox(
-                  width: 50,
-                  height: 50,
-                  child: Center(
-                    child: Text('Loading...'),
-                  ),
-                ),
-                size: Size(MediaQuery.of(context).size.width, 400),
-                data: controller.chartData.value,
-                scripts: const [
-                  "https://code.highcharts.com/highcharts.js",
-                  "https://code.highcharts.com/modules/exporting.js",
-                  "https://code.highcharts.com/modules/export-data.js",
-                  "https://code.highcharts.com/highcharts-more.js",
-                  "https://code.highcharts.com/modules/accessibility.js",
-                ],
-              ),
-              SizedBox(height: 20),
-              HighCharts(
-                loader: const SizedBox(
-                  width: 50,
-                  height: 50,
-                  child: Center(
-                    child: Text('Loading...'),
-                  ),
-                ),
-                size: Size(MediaQuery.of(context).size.width, 400),
-                data: controller.pieChartData.value,
-                scripts: const [
-                  "https://code.highcharts.com/highcharts.js",
-                  "https://code.highcharts.com/modules/exporting.js",
-                  "https://code.highcharts.com/modules/export-data.js",
-                  "https://code.highcharts.com/highcharts-more.js",
-                  "https://code.highcharts.com/modules/accessibility.js",
-                ],
-              ),
-            ],
-          ),
-        );
-      }
-    });
+    return  Column(
+      children: [
+        SizedBox(
+            height:400,
+            child: ColumnChartScreen()),
+        SizedBox(
+            height:400,
+            child: PieChartScreen()),
+
+        // Obx(() {
+        //   if (controller.isLoading.isTrue) {
+        //     return Center(child: CircularProgressIndicator());
+        //   } else if (controller.hasError.isTrue) {
+        //     return Center(child: Text('Error loading data.'));
+        //   }
+        //   else if (controller.errorMessage.isNotEmpty) {
+        //     return Center(child: Text(controller.errorMessage.value, style: TextStyle(color: Colors.red)));
+        //   } else {
+        //     return  HighCharts(
+        //       loader: const SizedBox(
+        //         width: 50,
+        //         height: 50,
+        //         child: Center(
+        //           child: Text('Loading...'),
+        //         ),
+        //       ),
+        //       size: Size(MediaQuery.of(context).size.width, 400),
+        //       data: controller.pieChartData.value,
+        //       scripts: const [
+        //         "https://code.highcharts.com/highcharts.js",
+        //         "https://code.highcharts.com/modules/exporting.js",
+        //         "https://code.highcharts.com/modules/export-data.js",
+        //         "https://code.highcharts.com/highcharts-more.js",
+        //         "https://code.highcharts.com/modules/accessibility.js",
+        //       ],
+        //     );
+        //     //   Column(
+        //     //   children: [
+        //     //
+        //     //     // Coloum chart by using highchart package
+        //     //     // HighCharts(
+        //     //     //   loader: const SizedBox(
+        //     //     //     width: 50,
+        //     //     //     height: 50,
+        //     //     //     child: Center(
+        //     //     //       child: Text('Loading...'),
+        //     //     //     ),
+        //     //     //   ),
+        //     //     //   size: Size(MediaQuery.of(context).size.width, 400),
+        //     //     //   data: controller.chartData.value,
+        //     //     //   scripts: const [
+        //     //     //     "https://code.highcharts.com/highcharts.js",
+        //     //     //     "https://code.highcharts.com/modules/exporting.js",
+        //     //     //     "https://code.highcharts.com/modules/export-data.js",
+        //     //     //     "https://code.highcharts.com/highcharts-more.js",
+        //     //     //     "https://code.highcharts.com/modules/accessibility.js",
+        //     //     //   ],
+        //     //     // ),
+        //     //     SizedBox(height: 20),
+        //     //
+        //     //   ],
+        //     // );
+        //   }
+        // }),
+      ],
+    );
   }
 
   String _prepareChartData(Map<String, List<double>> data, DateTime startDate) {

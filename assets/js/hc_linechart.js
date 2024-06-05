@@ -1,87 +1,103 @@
 function jsHeatmapFunc(chartData, startDate, endDate) {
-  // Function to generate array of dates between two dates
-  function getDatesBetween(startDate, endDate) {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    const dates = [];
+  try {
+    console.log('jsHeatmapFunc called with data:', chartData);
+    console.log('Start Date:', startDate, 'End Date:', endDate);
 
-    while (start <= end) {
-      dates.push(new Date(start).toISOString().split('T')[0]);
-      start.setDate(start.getDate() + 1);
+    // Function to generate array of dates between two dates
+    function getDatesBetween(startDate, endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      const dates = [];
+
+      while (start <= end) {
+        dates.push(new Date(start).toISOString().split('T')[0]);
+        start.setDate(start.getDate() + 1);
+      }
+
+      // Format dates for display, e.g., 'Mon 01', 'Tue 02', ...
+      return dates.map(date => {
+        const d = new Date(date);
+        return d.toLocaleDateString('en-US', { weekday: 'short', day: '2-digit' });
+      });
     }
 
-    // Format dates for display, e.g., 'Mon 01', 'Tue 02', ...
-    return dates.map(date => {
-      const d = new Date(date);
-      return d.toLocaleDateString('en-US', { weekday: 'short', day: '2-digit' });
+    const dateCategories = getDatesBetween(startDate, endDate);
+
+    Highcharts.chart('highChartsDiv', {
+      chart: {
+        type: 'heatmap',
+        marginTop: 100,
+        marginBottom: 100,
+        plotBorderWidth: 10
+      },
+      title: {
+        text: 'Energy Consumption Pattern'
+      },
+      xAxis: {
+        categories: dateCategories,
+      },
+      yAxis: {
+        categories: ['12 AM', '1 AM', '2 AM', '3 AM', '4 AM', '5 AM', '6 AM', '7 AM', '8 AM', '9 AM', '10 AM', '11 AM', '12 PM', '1 PM', '2 PM', '3 PM', '4 PM', '5 PM', '6 PM', '7 PM', '8 PM', '9 PM', '10 PM', '11 PM'],
+        title: null,
+        reversed: true
+      },
+      colorAxis: {
+        min: 0,
+        minColor: '#FFFFFF', // white color for the minimum value
+        maxColor: '#960C0C', // the darkest shade of #960C0C
+        stops: [
+          [0, '#FFFFFF'],       // white at 0%
+          [0.1, '#F9C1C1'],     // slightly darker shade at 10%
+          [0.2, '#F49A9A'],     // and so on...
+          [0.3, '#EF7474'],
+          [0.4, '#EA4E4E'],
+          [0.5, '#E52828'],     // a medium shade around the 50% mark
+          [0.6, '#CC2323'],
+          [0.7, '#B31E1E'],
+          [0.8, '#991919'],
+          [0.9, '#801414'],     // a darker shade before the darkest at 90%
+          [1, '#960C0C']        // the darkest shade at 100%
+        ]
+      },
+
+      tooltip: {
+        formatter: function () {
+          var energyValue = (this.point.value / 1000).toFixed(2);
+          return '<b>' + this.series.xAxis.categories[this.point.x] + '</b><br><b>' +
+            this.series.yAxis.categories[this.point.y] + '</b><br><b>' +
+            'Energy: ' + energyValue + ' kWh</b>';
+        }
+      },
+      legend: {
+        align: 'right',
+        layout: 'vertical',
+        margin: 0,
+        verticalAlign: 'top',
+        y: 25,
+        symbolHeight: 280
+      },
+      series: [{
+        name: 'Hourly Energy Consumption',
+        borderWidth: 1,
+        data: chartData,
+        dataLabels: {
+          enabled: false
+        }
+      }]
     });
+  } catch (error) {
+    console.error('Error in jsHeatmapFunc:', error);
   }
-
-  const dateCategories = getDatesBetween(startDate, endDate);
-
-  Highcharts.chart('highChartsDiv', {
-    chart: {
-      type: 'heatmap',
-      marginTop: 100,
-      marginBottom: 100,
-      plotBorderWidth: 10
-    },
-    title: {
-      text: 'Energy Consumption Pattern'
-    },
-    xAxis: {
-      categories: dateCategories,
-    },
-    yAxis: {
-      categories: ['12 AM', '1 AM', '2 AM', '3 AM', '4 AM', '5 AM', '6 AM', '7 AM', '8 AM', '9 AM', '10 AM', '11 AM', '12 PM', '1 PM', '2 PM', '3 PM', '4 PM', '5 PM', '6 PM', '7 PM', '8 PM', '9 PM', '10 PM', '11 PM'],
-      title: null,
-      reversed: true
-    },
-   colorAxis: {
-     min: 0,
-     minColor: '#E8F5E9', // the lightest green color
-     maxColor: '#1B5E20', // the darkest green color
-     stops: [
-       [0, '#E8F5E9'],       // lightest green at 0%
-       [0.1, '#C8E6C9'],     // slightly darker shade at 10%
-       [0.2, '#A5D6A7'],     // and so on...
-       [0.3, '#81C784'],
-       [0.4, '#66BB6A'],
-       [0.5, '#4CAF50'],     // a medium green around the 50% mark
-       [0.6, '#43A047'],
-       [0.7, '#388E3C'],
-       [0.8, '#2E7D32'],
-       [0.9, '#1B5E20'],     // a darker shade before the darkest at 90%
-       [1, '#1B5E20']        // the darkest green at 100%
-     ]
-   },
-
-    tooltip: {
-      formatter: function () {
-        var energyValue = (this.point.value / 1000).toFixed(2);
-        return '<b>' + this.series.xAxis.categories[this.point.x] + '</b><br><b>' +
-          this.series.yAxis.categories[this.point.y] + '</b><br><b>' +
-          'Energy: ' + energyValue + ' kWh</b>';
-      }
-    },
-    legend: {
-      align: 'right',
-      layout: 'vertical',
-      margin: 0,
-      verticalAlign: 'top',
-      y: 25,
-      symbolHeight: 280
-    },
-    series: [{
-      name: 'Hourly Energy Consumption',
-      borderWidth: 1,
-      data: chartData,
-      dataLabels: {
-        enabled: false
-      }
-    }]
-  });
 }
+
+// Add event listener to ensure the content is fully loaded before running the script
+document.addEventListener('DOMContentLoaded', (event) => {
+  if (window.flutter_inappwebview) {
+    window.flutter_inappwebview.callHandler('pageLoaded');
+  }
+});
+
+
 
 
 

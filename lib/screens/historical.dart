@@ -1,15 +1,17 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
-
+import 'dart:ui' as ui;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:high_chart/high_chart.dart';
+import 'package:modal_progress_hud_nsn/modal_progress_hud_nsn.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../JS_Web_View/View/area_chart/area_chart_for_historical.dart';
 import '../controller/historical/historical_controller.dart';
 import '../itemapp.dart';
 import '../pdf/pdf_helper_function.dart';
@@ -28,10 +30,9 @@ class Historical extends StatefulWidget {
 
 class _HistoricalState extends State<Historical> {
   final controller = Get.put(HistoricalController());
-  ScreenshotController screenshotController1 = ScreenshotController();
+  ScreenshotController screenshotController = ScreenshotController();
   ScreenshotController screenshotController2 = ScreenshotController();
-  ScreenshotController screenshotController3 = ScreenshotController();
-
+  bool _isGeneratingPDF = false;
   String formatToKilo(double value) {
     if (value >= 1000) {
       // If the value is greater than or equal to 1000, format it as kilos
@@ -49,13 +50,13 @@ class _HistoricalState extends State<Historical> {
   @override
   void initState() {
     super.initState();
-    controller.fetchFirstApiData();
-    controller.fetchSecondApiData();
-    controller.checkDataAvailability();
+    // controller.fetchFirstApiData();
+    // controller.fetchSecondApiData();
+     controller.fetchMainKWData();
     _fetchAllData();
     controller.kwData.clear();
 
-     controller.fetchData(); // Fetch 7-day data
+    controller.fetchData(); // Fetch 7-day data
 
     controller.update();
 
@@ -75,25 +76,46 @@ class _HistoricalState extends State<Historical> {
   }
   Future<void> generateCustomPdf() async {
     try {
+      setState(() {
+        _isGeneratingPDF = true;
+      });
+
+      print("Generating PDF...");
+      await Future.delayed(Duration(seconds: 2));
       List<Uint8List> images = [];
+      Uint8List? image1 = await screenshotController.capture();
+      if (image1 != null) {
+        images.add(image1);
+      } else {
+        print("Error: Failed to capture image 1");
+      }
 
-      // Capture images and check for null
-      Uint8List? image1 = await screenshotController1.capture();
-      if (image1 != null) images.add(image1);
-
-
+      Uint8List? image2 = await screenshotController2.capture();
+      if (image2 != null) {
+        images.add(image2);
+      } else {
+        print("Error: Failed to capture image 2");
+      }
 
       if (images.isEmpty) {
         print("No images to add to PDF");
         return;
       }
 
-      String userName = await getUserName();  // Fetch the user's name from SharedPreferences
-      await PDFHelper.createCustomPdf(images, 'custom_document.pdf', userName);
+      String userName = await getUserName();
+      print("Creating PDF...");
+      await PDFHelper.createCustomPdf(images, '$userName.pdf', userName);
+      print("PDF generation completed.");
+
     } catch (e) {
       print("Error generating custom PDF: $e");
+    } finally {
+      setState(() {
+        _isGeneratingPDF = false;
+      });
     }
   }
+
 
 
   Future<void> _fetchAllData() async {
@@ -115,11 +137,29 @@ class _HistoricalState extends State<Historical> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: _buildUI(),
+    return Stack(
+      children: [
+        Scaffold(
+          body: ModalProgressHUD(
+              inAsyncCall: _isGeneratingPDF,
+              child: _buildUI()),
+        ),
+        _isGeneratingPDF ? _buildBlurLayer() : Container(),
+      ],
     );
   }
-
+  Widget _buildBlurLayer() {
+    return BackdropFilter(
+      filter: ui.ImageFilter.blur(sigmaX: 3, sigmaY: 3),
+      child: Container(
+        color: Colors.black.withOpacity(0.5),
+        alignment: Alignment.center,
+        child: CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation(Color(0xff009F8D)),
+        ),
+      ),
+    );
+  }
   Widget _buildUI() {
     return Scaffold(
       drawer: Sidedrawer(context: context),
@@ -132,15 +172,17 @@ class _HistoricalState extends State<Historical> {
         ),
         actions:  [
           IconButton(
-            icon: Icon(Icons.print),
+            icon: Icon(Icons.receipt, color: Color(0xff009F8D)),
             onPressed: generateCustomPdf,
           ),
-          BoxwithIcon(),
+          const BoxwithIcon(),
         ],
       ),
       body: SingleChildScrollView(
         child: Column(
           children: [
+
+
             Padding(
               padding: const EdgeInsets.only(left: 30, right: 50, top: 20),
               child: Row(
@@ -243,58 +285,80 @@ class _HistoricalState extends State<Historical> {
               height: 30,
             ),
             Obx(() {
+              if (controller.isLoading.value) {
+                return CircularProgressIndicator();
+              }
+
               final firstApiData = controller.firstApiData!.value;
               if (firstApiData == null || firstApiData.isEmpty) {
-                return CircularProgressIndicator();
+                return Text('No data available');
               } else {
                 if (firstApiData.containsKey("Main")) {
                   return _buildUiForMain(firstApiData);
                 } else {
-                  List<String> modifiedKeys =
-                      firstApiData.keys.map((key) => '$key\_[kW]').toList();
+                  List<String> modifiedKeys = firstApiData.keys.map((key) => '$key\_[kW]').toList();
                   return _buildUiForOther(modifiedKeys);
                 }
               }
             }),
 
+
             SizedBox(
               height: 20,
+
             ),
-            Container(
-              height: 450,
-              child: Obx(() {
-                if (controller.kwData.isEmpty) {
-                  return Center(
-                    child: CircularProgressIndicator(),
-                  );
-                } else {
-                  return Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 0, vertical: 2),
-                    child: HighCharts(
-                      loader: Center(
-                        child: Text('Loading...'),
-                      ),
-                      size: const Size(400, 400),
-                      data: _getChartData(
-                        controller.kwData,
-                      ),
-                      scripts: const [
-                        "https://code.highcharts.com/highcharts.js"
-                      ],
-                    ),
-                  );
-                }
-              }),
-            ),
-            SizedBox(
-              height: 20,
-            ),
-            // LineChartScreen(),
+
             Screenshot(
-              controller: screenshotController1,
-              child: LineChartScreentwo()
+              controller: screenshotController,
+              child: AreaChartScreen(),
             ),
+
+            // Screenshot(
+            //   controller: screenshotController,
+            //   child: Container(
+            //     height: 450,
+            //     child: Obx(() {
+            //       if (controller.kwData.isEmpty) {
+            //         return Center(
+            //           child: CircularProgressIndicator(),
+            //         );
+            //       } else {
+            //         return
+            //           Padding(
+            //             padding:
+            //             const EdgeInsets.symmetric(horizontal: 0, vertical: 2),
+            //             child: HighCharts(
+            //               loader: Center(
+            //                 child: Text('Loading...'),
+            //               ),
+            //               size: const Size(400, 400),
+            //               data: _getChartData(
+            //                 controller.kwData,
+            //               ),
+            //               scripts: const [
+            //                 "https://code.highcharts.com/highcharts.js"
+            //               ],
+            //             ),
+            //           );
+            //
+            //       }
+            //     }),
+            //   ),
+            // ),
+
+            SizedBox(
+              height: 20,
+            ),
+            Screenshot(
+                controller: screenshotController2,
+                child: Heatmap()
+            ),
+            // Screenshot(
+            //     controller: screenshotController2,
+            //     child: Heatmap()
+            // ),
+            // LineChartScreen(),
+
             // Padding(
             //   padding: const EdgeInsets.only(left: 10),
             //   child: LineChartScreentwo(),
@@ -310,9 +374,13 @@ class _HistoricalState extends State<Historical> {
 
   Widget _buildUiForMain(Map<String, dynamic> firstApiResponse) {
     return Obx(() {
+      if (controller.isLoading.value) {
+        return CircularProgressIndicator();
+      }
+
       final secondApiData = controller.secondApiData!.value;
       if (secondApiData == null || secondApiData.isEmpty) {
-        return CircularProgressIndicator();
+        return Text('No data available');
       } else {
         List<double> sumsList = [];
         for (int i = 0; i < secondApiData["Main_[kW]"].length; i++) {
@@ -329,6 +397,7 @@ class _HistoricalState extends State<Historical> {
       }
     });
   }
+
 
   Widget _buildSummaryUi(double totalSum, double minSum, double maxSum, double avgSum) {
     return Center(
@@ -656,10 +725,20 @@ class _HistoricalState extends State<Historical> {
         return CircularProgressIndicator();
       } else {
         List<double> sumsList = [];
-        for (int i = 0; i < secondApiData['1st Floor_[kW]'].length; i++) {
-          double sum =
-              controller.parseDouble(secondApiData['1st Floor_[kW]'][i]) +
-                  controller.parseDouble(secondApiData['Ground Floor_[kW]'][i]);
+
+        // Find the minimum length of available data for consistency
+        int minLength = modifiedKeys
+            .where((key) => secondApiData.containsKey(key))
+            .map((key) => secondApiData[key].length)
+            .reduce((a, b) => a < b ? a : b);
+
+        for (int i = 0; i < minLength; i++) {
+          double sum = 0.0;
+          for (String key in modifiedKeys) {
+            if (secondApiData.containsKey(key)) {
+              sum += controller.parseDouble(secondApiData[key][i]);
+            }
+          }
           sumsList.add(sum);
         }
 

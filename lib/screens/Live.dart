@@ -7,8 +7,10 @@ import 'package:high_chart/high_chart.dart';
 import 'package:highcharts_demo/widgets/custom_text.dart';
 import 'package:highcharts_demo/widgets/side_drawer.dart';
 
+import '../JS_Web_View/View/coloum_chart_for_live.dart';
+import '../JS_Web_View/pie_for_live.dart';
 import '../controller/Live/live_controller.dart';
-import '../controller/datacontroller.dart';
+
 
 class LiveDataScreen extends StatefulWidget {
   const LiveDataScreen({Key? key}) : super(key: key);
@@ -18,15 +20,15 @@ class LiveDataScreen extends StatefulWidget {
 }
 
 class _LiveDataScreenState extends State<LiveDataScreen> {
-  final controller = Get.put(LiveDataControllers());
+  final LiveDataControllers controller = Get.put(LiveDataControllers());
   late Timer _timer;
 
   @override
   void initState() {
     super.initState();
-    controller.fetchDataforlive();
+    controller.fetchDataforlives();
     _timer = Timer.periodic(Duration(minutes: 1), (Timer timer) {
-      controller.fetchDataforlive();
+      controller.fetchDataforlives();
     });
   }
 
@@ -55,30 +57,28 @@ class _LiveDataScreenState extends State<LiveDataScreen> {
           ),
         ],
       ),
-      body: Obx(
-            () => ListView.builder(
-          itemCount: controller.kwData.length,
-          itemBuilder: (context, index) {
-            Map<String, dynamic> dayData = controller.kwData[index];
-            List<Map<String, dynamic>> newData = dayData['data'];
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                StockColumnWidget(data: newData),
-                SizedBox(height: 40),
-                SizedBox(
-                  height: 700,
-                  width: 700,
-                  child: StockPieWidget(data: newData),
-                ),
-              ],
-            );
-          },
-        ),
-      ),
+      body: Obx(() {
+        if (controller.kwData.isEmpty) {
+          return Center(child: Text(controller.isOnline.value ? "Loading..." : "Displaying offline data"));
+        } else {
+          return ListView(
+            children: [
+              // StockColumnWidget(data: controller.kwData),
+              // SizedBox(height: 40),
+              WebViewColumnChart(data: controller.kwData),
+              // StockPieWidget(data: controller.kwData),
+              SizedBox(height: 40),
+              WebViewPieChart(data: controller.kwData),
+
+
+            ],
+          );
+        }
+      }),
     );
   }
 }
+
 
 class StockColumnWidget extends StatelessWidget {
   const StockColumnWidget({Key? key, required this.data}) : super(key: key);
@@ -88,6 +88,8 @@ class StockColumnWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final String chartData = _generateChartData(data);
+    // Debugging: Print the chart data to the console
+    print("Chart Data: $chartData");
     return HighCharts(
       loader: Center(child: Text('Loading...')),
       size: const Size(400, 400),
@@ -97,60 +99,75 @@ class StockColumnWidget extends StatelessWidget {
   }
 
   String _generateChartData(List<Map<String, dynamic>> data) {
+    if (data.isEmpty) {
+      Get.snackbar('dff', "No data available");
+      return "No data available";
+    }
     List<Map<String, dynamic>> seriesData = data.asMap().entries.map((entry) {
-      int index = entry.key;
-      Map<String, dynamic> itemData = entry.value;
-
-      String prefixName = itemData['prefixName'];
-      double lastIndexValue = itemData['lastIndexValue'] ?? 0.0; // Ensure fallback to 0.0 for null or invalid data
-
-      // Use the formatToKW method from DataControllers
-      String formattedValue = DataControllers().formatToKW(lastIndexValue);
-
+      String name = entry.value['name'].replaceAll('_[kW]', '');
+      double originalValue = entry.value['value'];
+      double scaledValue = originalValue / 1000;
+      String formattedValue = scaledValue.toStringAsFixed(1) + ' kW';
       return {
-        'name': prefixName,
-        'y': lastIndexValue,  // Use the original value for chart display
-        'formattedValue': formattedValue,  // Use the formatted value for display
+        'name': name,
+        'y': scaledValue,
+        'formattedValue': formattedValue,
       };
     }).toList();
 
     String seriesDataJson = jsonEncode(seriesData);
-
     return '''
     {
       chart: {
-        type: 'column',
+        type: 'column'
       },
       title: {
-        text: 'Live Data',
+        text: ''
       },
       xAxis: {
-        type: 'category',
+        type: 'category'
       },
       yAxis: {
         title: {
-          text: 'Power(kW)',
+          text: 'Power (kW)'
         },
-      },
-      plotOptions: {
-        column: {
-          colorByPoint: true,
+        labels: {
+          enabled: false
         },
+        min: 0,
+        startOnTick: false,
+        endOnTick: false,
+        gridLineWidth: 0,
+        minorGridLineWidth: 0,
+        lineColor: 'transparent',
+        minorTickLength: 0,
+        tickLength: 0
       },
       tooltip: {
         formatter: function() {
           return '<b>' + this.point.name + '</b><br/>' +
-                 'Power: ' + this.point.formattedValue + ' kW';
+                 'Power: ' + this.point.formattedValue;
+        }
+      },
+      plotOptions: {
+        column: {
+          colorByPoint: true,
+          pointPadding: 0.1,
+          groupPadding: 0.1,
+          borderWidth: 0,
+          minPointLength: 3
         }
       },
       series: [{
-        name: '',
-        data: $seriesDataJson,
-      }],
+        name: 'kW',
+        data: $seriesDataJson
+      }]
     }
     ''';
   }
 }
+
+
 
 class StockPieWidget extends StatelessWidget {
   const StockPieWidget({Key? key, required this.data}) : super(key: key);
@@ -169,69 +186,59 @@ class StockPieWidget extends StatelessWidget {
   }
 
   String _generateChartData(List<Map<String, dynamic>> data) {
-    // Filter out the data for the "Main" category
-    List<Map<String, dynamic>> filteredData = data.where((item) => item['prefixName'] != 'Main').toList();
+    double totalSum = data.fold(0, (sum, item) => sum + item['value'] / 1000);  // Scale the sum calculation
 
-    // Calculate the total sum of all values excluding "Main"
-    double totalSum = filteredData.fold(0, (sum, item) => sum + (item['lastIndexValue'] ?? 0.0));
+    List<Map<String, dynamic>> seriesData = data.map((item) {
+      String name = item['name'].replaceAll('_[kW]', '');  // Clean name
+      double scaledValue = item['value'] / 1000;  // Scale down the value
+      double percentage = (totalSum == 0) ? 0 : (scaledValue / totalSum * 100);  // Calculate percentage based on scaled value
+      String formattedValue = scaledValue.toStringAsFixed(3) + ' kW';  // Format the scaled value for display
 
-    // Predefined colors for the categories
-    List<String> colors = ['red', 'green', 'blue', 'orange', 'purple', 'yellow', 'cyan', 'magenta']; // Add more colors if needed
-
-    // Generate series data for pie chart with color settings
-    List<Map<String, dynamic>> seriesData = [];
-    for (int i = 0; i < filteredData.length; i++) {
-      var itemData = filteredData[i];
-      String prefixName = itemData['prefixName'];
-      double lastIndexValue = itemData['lastIndexValue'] ?? 0.0;
-      double percentage = (totalSum == 0) ? 0.0 : ((lastIndexValue / totalSum) * 100).roundToDouble();
-      String color = colors[i % colors.length];  // Cycle through the colors array safely
-
-      seriesData.add({
-        'name': prefixName,
-        'y': percentage,
-        'formattedValue': DataControllers().formatToKW(lastIndexValue),
-        'color': color // Assign color to each segment
-      });
-    }
+      return {
+        'name': name,
+        'y': percentage.round(),
+        'formattedValue': formattedValue,  // Use for tooltip display
+      };
+    }).toList();
 
     String seriesDataJson = jsonEncode(seriesData);
 
-    // Return chart configuration with dynamically populated series data including color information
     return '''
-  {
-    "chart": {
-      "type": "pie",
-      "size": "75%"
-    },
-    "title": {
-      "text": "Appliance Share"
-    },
-    "tooltip": {
-      "valueSuffix": "%",
-      "pointFormat": "Power: <b>{point.formattedValue}</b> kW"
-    },
-    "plotOptions": {
-      "pie": {
-        "allowPointSelect": true,
-        "cursor": "pointer",
-        "dataLabels": {
-          "enabled": true,
-          "format": "<b>{point.name}</b>: {point.y}%"
-        },
-        "showInLegend": true // Ensure legends are displayed
-      }
-    },
-    "series": [{
-      "name": "Live Data",
-      "data": $seriesDataJson
-    }]
+    {
+      chart: {
+        type: 'pie'
+      },
+      title: {
+        text: 'Appliance Energy Distribution'
+      },
+      tooltip: {
+        formatter: function() {
+          return '<b>' + this.point.name + '</b><br/>' +
+                 'Energy Share: ' + this.point.y.toFixed(1) + '%<br/>' +
+                 'Power: ' + this.point.formattedValue;  // Display the scaled value and percentage
+        }
+      },
+      plotOptions: {
+        pie: {
+          allowPointSelect: true,
+          cursor: 'pointer',
+          dataLabels: {
+            enabled: true,
+            format: '<b>{point.name}</b>: {point.y:.1f}%'
+          }
+        }
+      },
+      series: [{
+        name: 'Energy Share',
+        colorByPoint: true,
+        data: $seriesDataJson
+      }]
+    }
+    ''';
   }
-  ''';
-  }
-
-
 }
+
+
 
 
 // import 'dart:async';

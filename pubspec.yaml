@@ -54,21 +54,16 @@ dependencies:
   firebase_messaging: ^14.7.2
   app_settings: ^5.1.1
   firebase_analytics: ^10.10.2
-
-
-
-
-
-
-
-
+  modal_progress_hud_nsn: ^0.5.1
 
   # The following package is required for High Charts Integration
   high_chart: ^2.1.0
   pdf: ^3.10.8
   printing: ^5.12.0
   screenshot: ^2.3.0
-
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  sqflite: ^2.3.3+1
 
 
 dev_dependencies:
@@ -101,6 +96,27 @@ flutter:
     - assets/js/hc_linechart.js
     - assets/js/org_chart_index.html
     - assets/js/org_chart.js
+    - assets/js/hc_heatmap.js
+    - assets/js/hc_exporting.js
+    - assets/js/hc_accessibility.js
+    - assets/js/hc_export_data.js
+    - assets/js/hc_more.js
+    - assets/js/chart.js
+    - assets/js/chart.html
+    - assets/js/jsColumnChart.js
+    - assets/js/coloum_chart.html
+    - assets/js/highchart_more.js
+    - assets/js/jsColumChartFunc.js
+    - assets/js/hc_piechart.js
+    - assets/js/HighChart.js
+    - assets/js/hc_linechart_dailyanalysis.js
+    - assets/js/jsAreaChartFunc.js
+    - assets/js/coloum_for_live.js
+    - assets/js/jsPieChartFuncForLive.js
+    - assets/js/jsColoumChartForLive.js
+    - assets/js/jsPieChartFuncForThisWeek.js
+
+
 
 
 

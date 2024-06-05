@@ -7,17 +7,6 @@ import 'package:webview_flutter/webview_flutter.dart';
 
 import 'package:flutter/foundation.dart';
 
-import 'package:webview_flutter_android/webview_flutter_android.dart';
-import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
-// Update this with the path to your controller file
-import 'dart:convert';
-import 'package:get/get.dart';
-import 'package:http/http.dart' as http;
-
-import 'dart:convert';
-import 'package:get/get.dart';
-import 'package:http/http.dart' as http;
-
 import 'controller/historical/historical_controller.dart';
 
 class LineChartController extends GetxController {
@@ -37,14 +26,17 @@ class LineChartController extends GetxController {
     isLoading(true);
     try {
       // Assuming you have a user or a mechanism to select the current username dynamically
-      final String username = 'ahmad'; // Replace with actual dynamic username if needed
-      final url = Uri.parse('http://203.135.63.22:8000/buildingmap?username=$username');
+      final String username =
+          'ahmad'; // Replace with actual dynamic username if needed
+      final url =
+          Uri.parse('http://203.135.63.22:8000/buildingmap?username=$username');
       final response = await http.get(url);
 
       if (response.statusCode == 200) {
         fetchMainKWData();
       } else {
-        print('Failed to check data availability. Status code: ${response.statusCode}');
+        print(
+            'Failed to check data availability. Status code: ${response.statusCode}');
       }
     } catch (e) {
       print('An error occurred while checking data availability: $e');
@@ -58,7 +50,8 @@ class LineChartController extends GetxController {
     isLoading(true);
     try {
       // Replace with dynamic dates or parameters as necessary
-      final url = Uri.parse('http://203.135.63.22:8000/data?username=ahmad&mode=hour&start=${startDate.value}&end=${endDate.value}');
+      final url = Uri.parse(
+          'http://203.135.63.22:8000/data?username=ahmad&mode=hour&start=${startDate.value}&end=${endDate.value}');
       final response = await http.get(url);
 
       if (response.statusCode == 200) {
@@ -70,12 +63,15 @@ class LineChartController extends GetxController {
         } else {
           List<dynamic> firstFloorList = data['1st Floor_[kW]'];
           List<dynamic> groundFloorList = data['Ground Floor_[kW]'];
-          mainKWList = List.generate(firstFloorList.length, (index) => 0.0); // Initialize with zeroes
+          mainKWList = List.generate(
+              firstFloorList.length, (index) => 0.0); // Initialize with zeroes
 
           for (int i = 0; i < firstFloorList.length; i++) {
             // Sum the values index-wise from both keys
-            double firstFloorValue = double.tryParse(firstFloorList[i].toString()) ?? 0.0;
-            double groundFloorValue = double.tryParse(groundFloorList[i].toString()) ?? 0.0;
+            double firstFloorValue =
+                double.tryParse(firstFloorList[i].toString()) ?? 0.0;
+            double groundFloorValue =
+                double.tryParse(groundFloorList[i].toString()) ?? 0.0;
             mainKWList[i] = firstFloorValue + groundFloorValue;
           }
         }
@@ -83,20 +79,25 @@ class LineChartController extends GetxController {
         // Process the data for visualization
         List<List<dynamic>> chunks = [];
         for (int i = 0; i < mainKWList.length; i += 24) {
-          chunks.add(mainKWList.sublist(i, i + 24 > mainKWList.length ? mainKWList.length : i + 24));
+          chunks.add(mainKWList.sublist(
+              i, i + 24 > mainKWList.length ? mainKWList.length : i + 24));
         }
 
         List<String> xyValues = [];
         for (int day = 0; day < chunks.length; day++) {
           for (int hour = 0; hour < chunks[day].length; hour++) {
-            double value = (chunks[day][hour] == null || chunks[day][hour] == "NA") ? 0.0 : double.parse(chunks[day][hour].toString());
+            double value =
+                (chunks[day][hour] == null || chunks[day][hour] == "NA")
+                    ? 0.0
+                    : double.parse(chunks[day][hour].toString());
             xyValues.add('{"x": $day, "y": $hour, "value": $value}');
           }
         }
 
         chartData('[${xyValues.join(",")}]');
       } else {
-        throw Exception('Failed to load data. Status code: ${response.statusCode}');
+        throw Exception(
+            'Failed to load data. Status code: ${response.statusCode}');
       }
     } catch (e) {
       print('An error occurred while fetching and processing data: $e');
@@ -108,74 +109,53 @@ class LineChartController extends GetxController {
 
 
 
-class LineChartScreentwo extends StatefulWidget {
-  LineChartScreentwo({Key? key}) : super(key: key);
-
+class Heatmap extends StatefulWidget {
   @override
-  State<LineChartScreentwo> createState() => _LineChartScreentwoState();
+  State<Heatmap> createState() => _HeatmapState();
 }
 
-class _LineChartScreentwoState extends State<LineChartScreentwo> {
+class _HeatmapState extends State<Heatmap> {
   final HistoricalController controller = Get.put(HistoricalController());
+  late WebViewController webViewController;
 
-  final WebViewController webViewController = WebViewController();
+  @override
+  void initState() {
+    super.initState();
+    setupWebViewController();
+  //  controller.fetchMainKWData();
+  }
 
   void setupWebViewController() {
-    webViewController
+    webViewController = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..enableZoom(false)
+      ..enableZoom(true)
       ..clearCache()
       ..setBackgroundColor(Colors.transparent)
       ..loadFlutterAsset('assets/js/hc_index.html');
   }
-  @override
-  void initState() {
-    setupWebViewController();
-    // TODO: implement initState
-    super.initState();
-  }
-
 
   @override
   Widget build(BuildContext context) {
-
-
     return Column(
       children: [
         Obx(() {
           if (controller.isLoading.value) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
+          } else if (controller.chartData.value.isEmpty) {
+            return const Center(child: Text("No data available. Please check your internet connection."));
           } else {
-            // Reactively execute JavaScript whenever chartData changes
-            if (controller.chartData.value.isNotEmpty) {
-            //  webViewController.runJavaScript('jsHeatmapFunc(${controller.chartData.value});');
-
-              String jsCall = "jsHeatmapFunc(${controller.chartData.value}, '${controller.startDate.value}', '${controller.endDate.value}');";
-              webViewController.runJavaScript(jsCall);
-
-            }
-
+            String jsCall = "jsHeatmapFunc(${controller.chartData.value}, '${controller.startDate.value}', '${controller.endDate.value}');";
+            webViewController.runJavaScript(jsCall);
             return SizedBox(
               height: 700,
-              child: WebViewWidget( // Ensure WebViewWidget supports passing a WebViewController
-                controller: webViewController,
-              ),
+              child: WebViewWidget(controller: webViewController),
             );
           }
         }),
       ],
-
     );
   }
 }
-
-
-
-
-
-
-
-
 
 
 
@@ -258,8 +238,6 @@ class _LineChartScreentwoState extends State<LineChartScreentwo> {
 // }
 //
 //
-
-
 
 // import 'dart:convert';
 // import 'package:flutter/material.dart';
