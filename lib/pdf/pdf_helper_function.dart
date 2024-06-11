@@ -33,13 +33,12 @@ class PDFHelper {
               padding: const pw.EdgeInsets.only(top: 20, bottom: 10),
               child: pw.Text('Hello: $userName!', style: pw.TextStyle(fontSize: 16)),
             ),
-
             pw.Column(
-                crossAxisAlignment: pw.CrossAxisAlignment.stretch,
-                children: images.map((imageData) => pw.Container(
-                  margin: const pw.EdgeInsets.symmetric(vertical: 10),
-                  child: pw.Image(pw.MemoryImage(imageData), fit: pw.BoxFit.contain),
-                )).toList()
+              crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+              children: images.map((imageData) => pw.Container(
+                margin: const pw.EdgeInsets.symmetric(vertical: 10),
+                child: pw.Image(pw.MemoryImage(imageData), fit: pw.BoxFit.contain),
+              )).toList(),
             ),
             pw.Padding(
               padding: const pw.EdgeInsets.symmetric(vertical: 10),

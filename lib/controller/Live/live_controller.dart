@@ -98,6 +98,13 @@ class LiveDataControllers extends GetxController {
       print('Error fetching data: $error');
     }
   }
+
+  Future<void> cleardb() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.clear();  // Clear shared preferences
+    await DatabaseHelper.instance.clearDatabase();  // Clear database
+    kwData.clear();  // Clear in-memory data
+  }
 }
 
 class DatabaseHelper {
@@ -131,6 +138,10 @@ class DatabaseHelper {
       value $doubleType
     )
     ''');
+  }
+  Future<void> clearDatabase() async {
+    final db = await instance.database;
+    await db.delete('kw_table');  // Clear all data from the table
   }
 
   Future close() async {

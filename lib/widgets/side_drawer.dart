@@ -136,6 +136,7 @@ class Sidedrawer extends StatelessWidget {
               weekDataControllerForPieChart.logout();
               final LiveDataControllers LiveControler =
               Get.put(LiveDataControllers());
+              LiveControler.cleardb();
               final WeekDataControllerss coloumchart =
               Get.put(WeekDataControllerss());
               Get.delete<WeekDataControllerForPieChart>();

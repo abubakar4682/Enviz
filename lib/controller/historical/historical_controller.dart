@@ -1,9 +1,12 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:connectivity/connectivity.dart';
 import 'package:flutter/material.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:get/get.dart';
+import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../database/area_chart_helper_func.dart';
@@ -15,27 +18,42 @@ class HistoricalController extends GetxController {
   RxString endDate = ''.obs;
   var chartData = ''.obs;
   var isLoading = true.obs;
-  RxMap<String, dynamic>? firstApiData = <String, dynamic>{}.obs;
-  RxMap<String, dynamic>? secondApiData = <String, dynamic>{}.obs;
-
+  var errorMessage = ''.obs;  // Added errorMessage variable
+  RxMap<String, dynamic> firstApiData = <String, dynamic>{}.obs;
+  RxMap<String, dynamic> secondApiData = <String, dynamic>{}.obs;
   RxList<String> result = <String>['0', '0', '0'].obs;
   RxList<Map<String, dynamic>> kwData = <Map<String, dynamic>>[].obs;
+
   final DatabaseHelperForAreaChart dbHelper = DatabaseHelperForAreaChart();
   final DatabaseHelperForMinMax _databaseHelper = DatabaseHelperForMinMax();
+  final Logger logger = Logger();  // Initialize the logger
+
   @override
   void onInit() {
-    checkInitialData();
-    updateDateRange();
-  // fetchMainKWData();
     super.onInit();
+    updateDateRange();
+    fetchData();
   }
- void updateDateRange() {
+
+  void updateDateRange() {
     DateTime now = DateTime.now();
     DateTime sevenDaysAgo = now.subtract(Duration(days: 7));
 
-    // Format dates to a string in 'yyyy-MM-dd' format
     startDate.value = DateFormat('yyyy-MM-dd').format(sevenDaysAgo);
     endDate.value = DateFormat('yyyy-MM-dd').format(now);
+  }
+
+  Future<void> selectStartDate(BuildContext context) async {
+    DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2023),
+      lastDate: DateTime(2025),
+    );
+    if (picked != null) {
+      startDate.value = DateFormat('yyyy-MM-dd').format(picked);
+      kwData.clear();
+    }
   }
 
   Future<void> selectEndDate(BuildContext context) async {
@@ -46,27 +64,320 @@ class HistoricalController extends GetxController {
       lastDate: DateTime(2025),
     );
     if (picked != null) {
+      endDate.value = DateFormat('yyyy-MM-dd').format(picked);
+      await fetchData();
+    }
+  }
 
-      endDate(picked.toLocal().toString().split(' ')[0]);
+  int _getEpochMillis(DateTime dateTime) {
+    return dateTime.millisecondsSinceEpoch;
+  }
+
+  Future<void> fetchData() async {
+    isLoading.value = true;
+    try {
+      await checkInitialData();
+      await fetchDataForAreaChart();
+      await fetchDataForHeatmap();
+    } catch (e) {
+      logger.e("Error fetching data: $e");
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> fetchDataForHeatmap() async {
+    logger.d('Getting Data For Heatmap');
+
+    await _fetchAndProcessHeatmapData();
+  }
+
+  Future<void> _fetchAndProcessHeatmapData() async {
+    await fetchFirstApiDataForHeatmap();
+
+    var connectivityResult = await Connectivity().checkConnectivity();
+    if (connectivityResult == ConnectivityResult.none) {
+      logger.d("No internet connection. Checking local data.");
+      await loadLocalData();
+    } else {
+      logger.d("Internet connection available. Fetching data from the internet.");
+      await fetchDataFromInternet();
+    }
+  }
+
+  Future<void> fetchFirstApiDataForHeatmap() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? storedUsername = prefs.getString('username');
+    try {
+      final response = await http.get(Uri.parse('http://203.135.63.47:8000/buildingmap?username=$storedUsername'));
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseData = json.decode(response.body);
+        firstApiData.value = responseData;
+        await DatabaseHelper.insertFirstApiData(json.encode(responseData));
+        logger.d("First API data fetched and stored locally.");
+      } else {
+        throw Exception('Failed to load data from the first API. Status code: ${response.statusCode}');
+      }
+    } catch (e) {
+      logger.e("Error fetching first API data: $e");
+      String? localFirstApiData = await DatabaseHelper.getFirstApiData();
+      if (localFirstApiData != null) {
+        firstApiData.value = json.decode(localFirstApiData);
+        logger.d("Loaded first API data from local storage.");
+      } else {
+        logger.e("No first API data available in local storage.");
+        Get.snackbar("Error", "Failed to fetch data and no local data available.");
+      }
+    }
+  }
+
+  Future<void> fetchMainKWDataForHeatMap() async {
+    await ensureTablesExist();
+    await fetchFirstApiDataForHeatmap();
+
+    var connectivityResult = await Connectivity().checkConnectivity();
+    if (connectivityResult == ConnectivityResult.none) {
+      logger.d("No internet connection. Checking local data.");
+      await loadLocalData();
+    } else {
+      logger.d("Internet connection available. Fetching data from the internet.");
+      await fetchDataFromInternet();
+    }
+  }
+
+  Future<void> ensureTablesExist() async {
+    final db = await DatabaseHelper.database;
+    await db.execute('CREATE TABLE IF NOT EXISTS Data(id INTEGER PRIMARY KEY AUTOINCREMENT, data TEXT)');
+    await db.execute('CREATE TABLE IF NOT EXISTS FirstApiData(id INTEGER PRIMARY KEY AUTOINCREMENT, data TEXT)');
+    logger.d("Tables checked/created.");
+  }
+
+  Future<void> fetchDataFromInternet() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? storedUsername = prefs.getString('username');
+    try {
+      final url = Uri.parse('http://203.135.63.47:8000/data?username=$storedUsername&mode=hour&start=${startDate.value}&end=${endDate.value}');
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body)['data'];
+        await processDataAndSave(data);
+        logger.d("Data fetched from the internet and processed.");
+      } else {
+        throw Exception('Failed to load data. Status code: ${response.statusCode}');
+      }
+    } catch (e) {
+      logger.e("Error fetching data from internet: $e");
+      await loadLocalData();
+    }
+  }
+
+  Future<void> loadLocalData() async {
+    String? localData = await DatabaseHelper.getData();
+    if (localData != null) {
+      chartData.value = localData;
+      Get.snackbar("Offline Mode", "Showing local data. Connect to the internet to get the latest updates.", snackPosition: SnackPosition.BOTTOM, duration: Duration(seconds: 8));
+      logger.d("Loaded chart data from local storage.");
+    } else {
+      chartData.value = '';
+      Get.snackbar("Offline", "No local data available. Please check your internet connection.");
+      logger.e("No local data available.");
+    }
+  }
+
+  Future<void> processDataAndSave(Map<String, dynamic> data) async {
+    List<dynamic> mainKWList = data.containsKey('Main_[kW]') ? data['Main_[kW]'] : _getDynamicKeysData(data);
+
+    if (mainKWList.isNotEmpty) {
+      List<List<dynamic>> chunks = _chunkData(mainKWList, 24);
+      String jsonData = _prepareJsonData(chunks);
+      chartData.value = jsonData;
+      await DatabaseHelper.insertData(jsonData);
+      logger.d("Processed data saved locally.");
+    } else {
+      logger.e("No valid data found to process.");
+    }
+  }
+
+  List<dynamic> _getDynamicKeysData(Map<String, dynamic> data) {
+    List<String> dynamicKeys = firstApiData.keys.map((key) => '${key}_[kW]').toList();
+    List<dynamic> validDataLists = dynamicKeys.where((key) => data.containsKey(key)).map((key) => data[key]).toList();
+
+    if (validDataLists.isEmpty) {
+      Get.snackbar("Data Error", "Required data keys are missing.");
+      return [];
+    } else {
+      List<dynamic> mainKWList = List.generate(validDataLists.first.length, (index) => 0.0);
+      for (var dataList in validDataLists) {
+        for (int i = 0; i < dataList.length; i++) {
+          double value = double.tryParse(dataList[i].toString()) ?? 0.0;
+          mainKWList[i] += value;
+        }
+      }
+      return mainKWList;
+    }
+  }
+
+  List<List<dynamic>> _chunkData(List<dynamic> data, int chunkSize) {
+    List<List<dynamic>> chunks = [];
+    for (int i = 0; i < data.length; i += chunkSize) {
+      chunks.add(data.sublist(i, i + chunkSize > data.length ? data.length : i + chunkSize));
+    }
+    return chunks;
+  }
+
+  String _prepareJsonData(List<List<dynamic>> chunks) {
+    List<String> xyValues = [];
+    for (int day = 0; day < chunks.length; day++) {
+      for (int hour = 0; hour < chunks[day].length; hour++) {
+        double value = (chunks[day][hour] == null || chunks[day][hour] == "NA") ? 0.0 : double.parse(chunks[day][hour].toString());
+        xyValues.add('{"x": $day, "y": $hour, "value": $value}');
+      }
+    }
+    return '[${xyValues.join(",")}]';
+  }
+
+  Future<void> checkInitialData() async {
+    var connectivityResult = await Connectivity().checkConnectivity();
+    if (connectivityResult == ConnectivityResult.none) {
+      await loadOfflineData();
+    } else {
+      await fetchFirstApiData();
       await fetchSecondApiData();
-      fetchMainKWData();
-      // kwData.clear();
-      fetchData();
     }
   }
-  Future<void> selectStartDate(BuildContext context) async {
-    DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2023),
-      lastDate: DateTime(2025),
-    );
-    if (picked != null) {
-      startDate(picked.toLocal().toString().split(' ')[0]);
-      kwData.clear();
+
+  Future<void> loadOfflineData() async {
+    isLoading.value = true;
+    final storedFirstApiData = await _databaseHelper.getFirstApiData();
+    final storedSecondApiData = await _databaseHelper.getSecondApiData();
+
+    if (storedFirstApiData.isNotEmpty) {
+      firstApiData.value = storedFirstApiData.map((key, value) => MapEntry(key, json.decode(value)));
+    }
+    if (storedSecondApiData.isNotEmpty) {
+      secondApiData.value = storedSecondApiData.map((key, value) => MapEntry(key, json.decode(value)));
+    }
+    isLoading.value = false;
+  }
+
+  Future<void> fetchFirstApiData() async {
+    isLoading.value = true;
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? storedUsername = prefs.getString('username');
+
+    try {
+      final response = await http.get(Uri.parse('http://203.135.63.47:8000/buildingmap?username=$storedUsername'));
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseData = json.decode(response.body);
+        firstApiData.value = responseData;
+
+        responseData.forEach((key, value) async {
+          await _databaseHelper.insertFirstApiData(key, json.encode(value));
+        });
+      } else {
+        throw Exception('Failed to load data from the first API');
+      }
+    } catch (e) {
+      logger.e("Error fetching first API data: $e");
+    }
+    isLoading.value = false;
+  }
+
+  Future<void> fetchSecondApiData() async {
+    isLoading.value = true;
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? storedUsername = prefs.getString('username');
+
+    try {
+      final response = await http.get(Uri.parse('http://203.135.63.47:8000/data?username=$storedUsername&mode=hour&start=${startDate.value}&end=${endDate.value}'));
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> secondApiResponse = json.decode(response.body);
+        final Map<String, dynamic> filteredData = _filterSecondApiData(secondApiResponse['data']);
+
+        secondApiData.value = filteredData;
+
+        filteredData.forEach((key, value) async {
+          await _databaseHelper.insertSecondApiData(key, json.encode(value));
+        });
+      } else {
+        throw Exception('Failed to load data from the second API');
+      }
+    } catch (e) {
+      logger.e("Error fetching second API data: $e");
+    }
+    isLoading.value = false;
+  }
+
+  Map<String, dynamic> _filterSecondApiData(Map<String, dynamic> data) {
+    final Map<String, dynamic> filteredData = {};
+    data.forEach((key, value) {
+      if (value.isEmpty) {
+        filteredData[key] = List<double>.filled(24, 0.0);
+      } else {
+        filteredData[key] = value.map<double>((v) => parseDouble(v)).toList();
+      }
+    });
+    return filteredData;
+  }
+
+  Future<void> fetchDataForAreaChart() async {
+    try {
+      errorMessage.value = '';
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? storedUsername = prefs.getString('username');
+      if (storedUsername == null) {
+        throw Exception("Username not found in SharedPreferences");
+      }
+
+      final String appUrl = 'http://203.135.63.47:8000/data?username=$storedUsername&mode=hour&start=${startDate.value}&end=${endDate.value}';
+      final response = await http.get(Uri.parse(appUrl));
+
+      if (response.statusCode == 200) {
+        kwData.clear();
+        dbHelper.clearKwData();  // Clear existing data before inserting new data
+        Map<String, dynamic> jsonData = json.decode(response.body);
+        if (jsonData['data'] == null) {
+          throw Exception("No data found in the response");
+        }
+
+        _processAreaChartData(jsonData['data']);
+      } else {
+        throw Exception('Failed to fetch data. Status code: ${response.statusCode}');
+      }
+    } on SocketException {
+      errorMessage.value = 'No Internet Connection';
+      Get.snackbar("Error", errorMessage.value);
+      await _loadDataFromLocalDb();
+    } on FormatException {
+      errorMessage.value = 'Data format error';
+      Get.snackbar("Error", errorMessage.value);
+      await _loadDataFromLocalDb();
+    } catch (error) {
+      errorMessage.value = 'An unexpected error occurred: $error';
+      Get.snackbar("Error", errorMessage.value);
+      await _loadDataFromLocalDb();
     }
   }
-  String getChartData() {
+
+  void _processAreaChartData(Map<String, dynamic> data) {
+    data.forEach((itemName, values) {
+      if (itemName.endsWith("[kW]")) {
+        String prefixName = itemName.substring(0, itemName.length - 4);
+        List<double> numericValues = (values as List<dynamic>).map((value) {
+          return parseDouble(value) / 1000.0;
+        }).toList();
+
+        kwData.add({'prefixName': prefixName, 'values': numericValues});
+        dbHelper.insertKwData(prefixName, numericValues);
+      }
+    });
+  }
+
+  String getChartDataForAreaChart() {
     List<Map<String, dynamic>> seriesData = [];
     kwData.forEach((item) {
       String prefixName = item['prefixName'].replaceAll('_', '');
@@ -102,417 +413,26 @@ class HistoricalController extends GetxController {
     return jsonEncode(seriesData);
   }
 
-
-  int _getEpochMillis(DateTime dateTime) {
-    return dateTime.millisecondsSinceEpoch;
-  }
-
-  Future<void> fetchFirstApiDataforheatmap() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? storedUsername = prefs.getString('username');
-    try {
-      final response = await http.get(Uri.parse('http://203.135.63.47:8000/buildingmap?username=$storedUsername'));
-
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> responseData = json.decode(response.body);
-        firstApiData!.value = responseData;
-        await DatabaseHelper.insertFirstApiData(json.encode(responseData));
-        print("First API data fetched and stored locally.");
-      } else {
-        throw Exception('Failed to load data from the first API. Status code: ${response.statusCode}');
-      }
-    } catch (e) {
-      print("Error fetching first API data: $e");
-      String? localFirstApiData = await DatabaseHelper.getFirstApiData();
-      if (localFirstApiData != null) {
-        firstApiData!.value = json.decode(localFirstApiData);
-        print("Loaded first API data from local storage.");
-      } else {
-        print("No first API data available in local storage.");
-        Get.snackbar("Error", "Failed to fetch data and no local data available.");
-      }
-    }
-  }
-
-  // void checkDataAvailability() async {
-  //   isLoading(true);
-  //   try {
-  //     SharedPreferences prefs = await SharedPreferences.getInstance();
-  //     String? storedUsername = prefs.getString('username');
-  //     // Assuming you have a user or a mechanism to select the current username dynamically
-  //     // Replace with actual dynamic username if needed
-  //     final url = Uri.parse(
-  //         'http://203.135.63.47:8000/buildingmap?username=$storedUsername');
-  //     final response = await http.get(url);
-  //
-  //     if (response.statusCode == 200) {
-  //       fetchMainKWData();
-  //     } else {
-  //       print(
-  //           'Failed to check data availability. Status code: ${response.statusCode}');
-  //     }
-  //   } catch (e) {
-  //     print('An error occurred while checking data availability: $e');
-  //   } finally {
-  //     isLoading(false);
-  //   }
-  // }
-
-  // Method to fetch and process data for heatmap chart visualization
-  Future<void> fetchMainKWData() async {
-    isLoading(true);
-    await ensureTablesExist();
-    await fetchFirstApiDataforheatmap();
-    var connectivityResult = await (Connectivity().checkConnectivity());
-    if (connectivityResult == ConnectivityResult.none) {
-      print("No internet connection. Checking local data.");
-      await loadLocalData();
-    } else {
-      print("Internet connection available. Fetching data from the internet.");
-      await fetchDataFromInternet();
-    }
-    isLoading(false);
-  }
-
-  Future<void> ensureTablesExist() async {
-    final db = await DatabaseHelper.database;
-    await db.execute('CREATE TABLE IF NOT EXISTS Data(id INTEGER PRIMARY KEY AUTOINCREMENT, data TEXT)');
-    await db.execute('CREATE TABLE IF NOT EXISTS FirstApiData(id INTEGER PRIMARY KEY AUTOINCREMENT, data TEXT)');
-    print("Tables checked/created.");
-  }
-  // void fetchMainKWData() async {
-  //   isLoading(true);
-  //   var connectivityResult = await (Connectivity().checkConnectivity());
-  //   if (connectivityResult == ConnectivityResult.none) {
-  //     // No internet connection
-  //     String? localData = await DatabaseHelper.getData();
-  //     if (localData != null) {
-  //       chartData.value = localData;
-  //       Get.snackbar(
-  //           "Offline Mode",
-  //           "Showing local data. Connect to the internet to get the latest updates.",
-  //           snackPosition: SnackPosition.BOTTOM,
-  //           duration: Duration(seconds: 8)
-  //       );
-  //     } else {
-  //       print("No local data available.");
-  //       Get.snackbar("Offline", "No local data available. Please check your internet connection.");
-  //       chartData.value = '';
-  //     }
-  //   } else {
-  //     // There is internet connection
-  //     fetchDataFromInternet();
-  //   }
-  //   isLoading(false);
-  // }
-  Future<void> fetchDataFromInternet() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? storedUsername = prefs.getString('username');
-    try {
-      final url = Uri.parse('http://203.135.63.47:8000/data?username=$storedUsername&mode=hour&start=${startDate.value}&end=${endDate.value}');
-      final response = await http.get(url);
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body)['data'];
-        await processDataAndSave(data);
-        print("Data fetched from the internet and processed.");
-      } else {
-        throw Exception('Failed to load data. Status code: ${response.statusCode}');
-      }
-    } catch (e) {
-      print("Error fetching data from internet: $e");
-      await loadLocalData();
-    }
-  }
-  Future<void> loadLocalData() async {
-    String? localData = await DatabaseHelper.getData();
-    if (localData != null) {
-      chartData.value = localData;
-      Get.snackbar(
-          "Offline Mode",
-          "Showing local data. Connect to the internet to get the latest updates.",
-          snackPosition: SnackPosition.BOTTOM,
-          duration: Duration(seconds: 8)
-      );
-      print("Loaded chart data from local storage.");
-    } else {
-      chartData.value = '';
-      Get.snackbar("Offline", "No local data available. Please check your internet connection.");
-      print("No local data available.");
-    }
-  }
-  // void fetchDataFromInternet() async {
-  //   try {
-  //     SharedPreferences prefs = await SharedPreferences.getInstance();
-  //     String? storedUsername = prefs.getString('username');
-  //     final url = Uri.parse(
-  //         'http://203.135.63.47:8000/data?username=$storedUsername&mode=hour&start=${startDate.value}&end=${endDate.value}');
-  //     final response = await http.get(url);
-  //
-  //     if (response.statusCode == 200) {
-  //       final data = json.decode(response.body)['data'];
-  //       await _processDataAndSave(data); // Process and save data
-  //     } else {
-  //       throw Exception('Failed to load data. Status code: ${response.statusCode}');
-  //     }
-  //   } catch (e) {
-  //     print('An error occurred while fetching data from internet: $e');
-  //     String? localData = await DatabaseHelper.getData();
-  //     if (localData != null) {
-  //       chartData.value = localData;
-  //     } else {
-  //       Get.snackbar("Error", "Failed to fetch data and no local data available.");
-  //     }
-  //   }
-  // }
-  Future<void> processDataAndSave(Map<String, dynamic> data) async {
-    List<dynamic> mainKWList;
-
-    if (data.containsKey('Main_[kW]')) {
-      mainKWList = data['Main_[kW]'];
-    } else {
-      List<String> dynamicKeys = firstApiData!.keys
-          .map((key) => '${key}_[kW]')
-          .toList();
-
-      List<dynamic> validDataLists = dynamicKeys
-          .where((key) => data.containsKey(key))
-          .map((key) => data[key])
-          .toList();
-
-      if (validDataLists.isEmpty) {
-        Get.snackbar("Data Error", "Required data keys are missing.");
-        mainKWList = List.empty();
-      } else {
-        mainKWList = List.generate(validDataLists.first.length, (index) => 0.0);
-
-        for (var dataList in validDataLists) {
-          for (int i = 0; i < dataList.length; i++) {
-            double value = double.tryParse(dataList[i].toString()) ?? 0.0;
-            mainKWList[i] += value;
-          }
-        }
-      }
-    }
-
-    if (mainKWList.isNotEmpty) {
-      List<List<dynamic>> chunks = [];
-      for (int i = 0; i < mainKWList.length; i += 24) {
-        chunks.add(mainKWList.sublist(i, i + 24 > mainKWList.length ? mainKWList.length : i + 24));
-      }
-
-      List<String> xyValues = [];
-      for (int day = 0; day < chunks.length; day++) {
-        for (int hour = 0; hour < chunks[day].length; hour++) {
-          double value = (chunks[day][hour] == null || chunks[day][hour] == "NA") ? 0.0 : double.parse(chunks[day][hour].toString());
-          xyValues.add('{"x": $day, "y": $hour, "value": $value}');
-        }
-      }
-
-      String jsonData = '[${xyValues.join(",")}]';
-      chartData.value = jsonData;
-      await DatabaseHelper.insertData(jsonData);
-      print("Processed data saved locally.");
-    } else {
-      print("No valid data found to process.");
-    }
-  }
-
-//   Future<void> _processDataAndSave(Map<String, dynamic> data) async {
-//     List<dynamic> mainKWList;
-//
-//     if (data.containsKey('Main_[kW]')) {
-//       mainKWList = data['Main_[kW]'];
-//     } else {
-//       List<dynamic> firstFloorList = data['1st Floor_[kW]'];
-//       List<dynamic> groundFloorList = data['Ground Floor_[kW]'];
-//       mainKWList = List.generate(
-//           firstFloorList.length, (index) => 0.0); // Initialize with zeroes
-//
-//       for (int i = 0; i < firstFloorList.length; i++) {
-//         // Sum the values index-wise from both keys
-//         double firstFloorValue =
-//             double.tryParse(firstFloorList[i].toString()) ?? 0.0;
-//         double groundFloorValue =
-//             double.tryParse(groundFloorList[i].toString()) ?? 0.0;
-//         mainKWList[i] = firstFloorValue + groundFloorValue;
-//       }
-//     }
-// //haruto
-//     // Process the data for visualization
-//     List<List<dynamic>> chunks = [];
-//     for (int i = 0; i < mainKWList.length; i += 24) {
-//       chunks.add(mainKWList.sublist(
-//           i, i + 24 > mainKWList.length ? mainKWList.length : i + 24));
-//     }
-//
-//     List<String> xyValues = [];
-//     for (int day = 0; day < chunks.length; day++) {
-//       for (int hour = 0; hour < chunks[day].length; hour++) {
-//         double value =
-//         (chunks[day][hour] == null || chunks[day][hour] == "NA")
-//             ? 0.0
-//             : double.parse(chunks[day][hour].toString());
-//         xyValues.add('{"x": $day, "y": $hour, "value": $value}');
-//       }
-//     }
-//
-//     String jsonData = '[${xyValues.join(",")}]';
-//     chartData.value = jsonData;
-//     await DatabaseHelper.insertData(jsonData); // Store processed data in local database
-//     // String jsonData = jsonEncode(mainKWList);
-//     // chartData.value = jsonData;
-//     // await DatabaseHelper.insertData(jsonData);
-//   }
-  Future<void> checkInitialData() async {
-    var connectivityResult = await (Connectivity().checkConnectivity());
-    if (connectivityResult == ConnectivityResult.none) {
-      await loadOfflineData();
-    } else {
-      await fetchFirstApiData();
-      await fetchSecondApiData();
-    }
-  }
-  Future<void> loadOfflineData() async {
-    isLoading.value = true;
-    final storedFirstApiData = await _databaseHelper.getFirstApiData();
-    final storedSecondApiData = await _databaseHelper.getSecondApiData();
-
-    if (storedFirstApiData.isNotEmpty) {
-      firstApiData!.value = storedFirstApiData.map((key, value) => MapEntry(key, json.decode(value)));
-    }
-    if (storedSecondApiData.isNotEmpty) {
-      secondApiData!.value = storedSecondApiData.map((key, value) => MapEntry(key, json.decode(value)));
-    }
-    isLoading.value = false;
-  }
-
-
-
-  Future<void> fetchFirstApiData() async {
-    isLoading.value = true;
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? storedUsername = prefs.getString('username');
-
-    try {
-      final response = await http.get(Uri.parse(
-          'http://203.135.63.47:8000/buildingmap?username=$storedUsername'));
-
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> responseData = json.decode(response.body);
-        firstApiData!.value = responseData;
-
-        // Store data in SQLite
-        responseData.forEach((key, value) async {
-          await _databaseHelper.insertFirstApiData(key, json.encode(value));
-        });
-      } else {
-        throw Exception('Failed to load data from the first API');
-      }
-    } catch (e) {
-      // Handle error (optionally log the error)
-    }
-    isLoading.value = false;
-  }
-
-
-  Future<void> fetchSecondApiData() async {
-    isLoading.value = true;
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? storedUsername = prefs.getString('username');
-
-    try {
-      final response = await http.get(Uri.parse(
-          'http://203.135.63.47:8000/data?username=$storedUsername&mode=hour&start=${startDate.value}&end=${endDate.value}'));
-
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> secondApiResponse = json.decode(response.body);
-        final Map<String, dynamic> filteredData = {};
-
-        secondApiResponse['data'].forEach((key, value) {
-          if (value.isEmpty) {
-            filteredData[key] = List<double>.filled(24, 0.0);
-          } else {
-            filteredData[key] = value.map<double>((v) => parseDouble(v)).toList();
-          }
-        });
-
-        secondApiData!.value = filteredData;
-
-        // Store data in SQLite
-        filteredData.forEach((key, value) async {
-          await _databaseHelper.insertSecondApiData(key, json.encode(value));
-        });
-      } else {
-        throw Exception('Failed to load data from the second API');
-      }
-    } catch (e) {
-      // Handle error (optionally log the error)
-    }
-    isLoading.value = false;
-  }
-
-
-
-
-  Future<void> fetchData() async {
-    try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? storedUsername = prefs.getString('username');
-      final String appuril =
-          'http://203.135.63.47:8000/data?username=$storedUsername&mode=hour&start=${startDate.value}&end=${endDate.value}';
-      final response = await http.get(Uri.parse(appuril));
-
-      if (response.statusCode == 200) {
-        Map<String, dynamic> jsonData = json.decode(response.body);
-        Map<String, dynamic> data = jsonData['data'];
-
-        data.forEach((itemName, values) {
-          if (itemName.endsWith("[kW]")) {
-            String prefixName = itemName.substring(0, itemName.length - 4);
-            List<double> numericValues =
-            (values as List<dynamic>).map((value) {
-              if (value is num) {
-                return value.toDouble() / 1000.0;
-              } else if (value is String) {
-                return (double.tryParse(value) ?? 0.0) / 1000.0;
-              } else {
-                return 0.0;
-              }
-            }).toList();
-
-            kwData.add({'prefixName': prefixName, 'values': numericValues});
-            dbHelper.insertKwData(prefixName, numericValues); // Store data locally
-          }
-        });
-      } else {
-        print('Failed to fetch data. Status code: ${response.statusCode}');
-        _loadDataFromLocalDb(); // Load data from local database if fetch fails
-      }
-    } catch (error) {
-      print('An unexpected error occurred: $error');
-      _loadDataFromLocalDb(); // Load data from local database if an error occurs
-    }
-  }
   Future<void> _loadDataFromLocalDb() async {
     List<Map<String, dynamic>> localData = await dbHelper.getKwData();
     kwData.clear();
-    localData.forEach((item) {
-      List<double> values = (item['dataValues'] as String)
-          .split(',')
-          .map((value) => double.tryParse(value) ?? 0.0)
-          .toList();
+    for (var item in localData) {
+      List<double> values = (item['dataValues'] as String).split(',').map((value) => double.tryParse(value) ?? 0.0).toList();
       kwData.add({'prefixName': item['prefixName'], 'values': values});
-    });
+    }
   }
 
+  Future<void> clearAllData() async {
+    kwData.clear();
+    await dbHelper.clearKwData();
+  }
 
   void resetController() {
-    // Reset to initial end date
-    firstApiData!.value = <String, dynamic>{}; // Clear the data
-    secondApiData!.value = <String, dynamic>{}; // Clear the data
-    result.value = <String>['0', '0', '0']; // Reset the result
-    kwData.clear(); // Clear the kW data list
+    firstApiData.value = <String, dynamic>{};
+    secondApiData.value = <String, dynamic>{};
+    result.value = <String>['0', '0', '0'];
+    kwData.clear();
+    clearAllData();
   }
 
   double parseDouble(dynamic value) {
@@ -522,32 +442,22 @@ class HistoricalController extends GetxController {
     return double.tryParse(value.toString()) ?? 0.0;
   }
 
-  double calculateTotalSum(List<double> sums) =>
-      sums.reduce((total, current) => total + current);
+  double calculateTotalSum(List<double> sums) => sums.reduce((total, current) => total + current);
 
-  double calculateMin(List<double> sums) =>
-      sums.reduce((min, current) => min < current ? min : current);
+  double calculateMin(List<double> sums) => sums.reduce((min, current) => min < current ? min : current);
 
-  double calculateMax(List<double> sums) =>
-      sums.reduce((max, current) => max > current ? max : current);
+  double calculateMax(List<double> sums) => sums.reduce((max, current) => max > current ? max : current);
 
-  double calculateAverage(List<double> sums) => sums.isEmpty
-      ? 0.0
-      : sums.reduce((sum, current) => sum + current) / sums.length;
+  double calculateAverage(List<double> sums) => sums.isEmpty ? 0.0 : sums.reduce((sum, current) => sum + current) / sums.length;
 
-  String formatValue(double value) => value >= 1000
-      ? '${(value / 1000).toStringAsFixed(2)}kW'
-      : '${(value / 1000).toStringAsFixed(2)}kW';
+  String formatValue(double value) => value >= 1000 ? '${(value / 1000).toStringAsFixed(2)}kW' : '${(value / 1000).toStringAsFixed(2)}kW';
 
-  String formatValued(double value) => (value / 1000).toStringAsFixed(2); //
-  // Add this method in HistoricalController
+  String formatValued(double value) => (value / 1000).toStringAsFixed(2);
+
   double getLastIndexValue(List<double> values) {
-    // Check if the list is empty to avoid errors
     if (values.isNotEmpty) {
       return values.last;
     }
-    // Return 0.0 or an appropriate default value if the list is empty
     return 0.0;
   }
 }
-

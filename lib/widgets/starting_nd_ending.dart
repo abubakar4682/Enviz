@@ -5,8 +5,8 @@ import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
 
 import '../controller/historical/historical_controller.dart';
 
-class SelectStartndEndingDate extends StatelessWidget {
-  const SelectStartndEndingDate({
+class SelectStartAndEndDate extends StatelessWidget {
+  const SelectStartAndEndDate({
     Key? key,
     required this.controller,
     required this.context,
@@ -32,7 +32,7 @@ class SelectStartndEndingDate extends StatelessWidget {
               decoration:  BoxDecoration (
                 color:  Color(0xffffffff),
                 borderRadius:  BorderRadius.circular(60),
-                boxShadow:  [
+                boxShadow:  const [
                   BoxShadow(
                     color:  Color(0x26000000),
                     offset:  Offset(0, 11),
@@ -69,7 +69,7 @@ class SelectStartndEndingDate extends StatelessWidget {
               decoration:  BoxDecoration (
                 color:  Color(0xffffffff),
                 borderRadius:  BorderRadius.circular(60),
-                boxShadow:  [
+                boxShadow:  const [
                   BoxShadow(
                     color:  Color(0x26000000),
                     offset:  Offset(0, 11),
@@ -84,7 +84,7 @@ class SelectStartndEndingDate extends StatelessWidget {
                   ),
                   //Text('${controller.endDate}'),
                   IconButton(
-                    icon: Icon(Icons.arrow_drop_down,size: 30,),
+                    icon: const Icon(Icons.arrow_drop_down,size: 30,),
                     onPressed: () => controller.selectEndDate(context),
                   ),
                 ],

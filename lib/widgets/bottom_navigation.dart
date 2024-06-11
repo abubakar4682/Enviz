@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
 
+import '../controller/historical/historical_controller.dart';
 import '../screens/historical.dart';
 
 import '../screens/Live.dart';
@@ -16,17 +19,26 @@ class BottomPage extends StatefulWidget {
 }
 
 class _BottomPageState extends State<BottomPage> {
+  //final controller = Get.put(HistoricalController());
+  @override
+  void initState() {
+   // controller.updateDateRange();
+   //  controller.fetchDataForAreaChart();
+   //  controller.fetchDataForHeatmap();
+    // TODO: implement initState
+    super.initState();
+  }
 
   int currentIndex = 0;
   List<Widget> pages = [
     SummaryTab(),
-     LiveDataScreen(),
+     const LiveDataScreen(),
     const Historical(),
     Dailyanalusic(),
   ];
 
   onTapped(int index) {
-    setState(() {
+      setState(() {
       currentIndex = index;
     });
   }

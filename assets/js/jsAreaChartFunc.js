@@ -1,3 +1,5 @@
+
+
 function jsAreaChartFunc(seriesData) {
     const container = document.getElementById('highChartsDiv');
     if (container) {

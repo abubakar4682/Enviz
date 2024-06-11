@@ -1,8 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
-
-
 class DatabaseHelperForAreaChart {
   static final DatabaseHelperForAreaChart _instance = DatabaseHelperForAreaChart._internal();
   factory DatabaseHelperForAreaChart() => _instance;
@@ -53,4 +51,3 @@ class DatabaseHelperForAreaChart {
     await db.delete('kw_data');
   }
 }
-
