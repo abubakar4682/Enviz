@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
+
 import 'package:toggle_switch/toggle_switch.dart';
 
-import '../controller/datacontroller.dart';
-import '../pichart.dart';
+
 
 class SwitchWidget extends StatelessWidget {
   const SwitchWidget({
@@ -50,12 +48,3 @@ class SwitchWidget extends StatelessWidget {
 }
 
 
-
-class LastMonthWidget extends StatelessWidget {
-  final summaryController = Get.put(DataControllers());
-  @override
-  Widget build(BuildContext context) {
-    // Placeholder for Last Month Widget UI
-    return  PieChart(controllers: summaryController);
-  }
-}

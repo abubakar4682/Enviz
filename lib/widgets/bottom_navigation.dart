@@ -3,11 +3,11 @@ import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 
 import '../controller/historical/historical_controller.dart';
-import '../screens/historical.dart';
+import '../screens/HistoricalTab/historical.dart';
 
-import '../screens/Live.dart';
+import '../screens/LiveScreen/Live.dart';
 import '../screens/SummaryTab/summary_full_screen.dart';
-import '../screens/daily_analysi.dart';
+import '../screens/Daily_Analysis/daily_analysi.dart';
 
 
 
@@ -34,7 +34,7 @@ class _BottomPageState extends State<BottomPage> {
     SummaryTab(),
      const LiveDataScreen(),
     const Historical(),
-    Dailyanalusic(),
+    DailyAnalysis(),
   ];
 
   onTapped(int index) {

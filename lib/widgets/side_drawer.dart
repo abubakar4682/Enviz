@@ -3,22 +3,23 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:highcharts_demo/screens/splashe_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-import '../JS_Web_View/View/View_for_month.dart';
-import '../JS_Web_View/js_coloum_web.dart';
 import '../controller/Live/live_controller.dart';
 import '../controller/NotificationController/notification_time.dart';
 import '../controller/NotificationController/toggle_controller.dart';
-import '../controller/Summary_Controller/pie_chart_for_this_month.dart';
-import '../controller/Summary_Controller/pie_chart_this_week.dart';
+
+import '../controller/Summary_Page_Controller/ChartsControllerForThisMonth/coloum_chart_for_month.dart';
+import '../controller/Summary_Page_Controller/ChartsControllerForThisWeek/coloum_chart_for_this_week.dart';
+import '../controller/Summary_Page_Controller/Data_for_this_month_controller.dart';
+import '../controller/Summary_Page_Controller/Week_Data_Chart_Controller.dart';
+import '../controller/Summary_Page_Controller/ChartsControllerForThisMonth/pie_chart_for_this_month.dart';
+import '../controller/Summary_Page_Controller/ChartsControllerForThisWeek/pie_chart_this_week.dart';
+import '../controller/Summary_Page_Controller/max_avg_min_controller.dart';
 import '../controller/auth_controller/login_controller.dart';
 import '../controller/datacontroller.dart';
 import '../controller/historical/historical_controller.dart';
 
-import '../screens/SummaryTab/this_month.dart';
-import '../screens/SummaryTab/this_week.dart';
+import '../screens/Org_Chart_Screen/org_chart_screen.dart';
 
-import '../today.dart';
 import 'custom_text.dart';
 
 class Sidedrawer extends StatelessWidget {
@@ -128,18 +129,26 @@ class Sidedrawer extends StatelessWidget {
               Get.put(MonthDataControllerForPieChart());
               monthDataControllerForPieChart.clearUserData();
 
+
+
+              final MinMaxAvgValueController minMaxAvgValueController =
+              Get.put(MinMaxAvgValueController());
+              monthDataControllerForPieChart.clearUserData();
+
+              minMaxAvgValueController.clearAllStoredData();
+              Get.delete<MinMaxAvgValueController>();
               Get.delete<MonthColoumDataControllerss>();
               final HistoricalController historicalController =
                   Get.put(HistoricalController());
-              final WeekDataControllerForPieChart weekDataControllerForPieChart =
-              Get.put(WeekDataControllerForPieChart());
+              final PieChartControllerForThisWeek weekDataControllerForPieChart =
+              Get.put(PieChartControllerForThisWeek());
               weekDataControllerForPieChart.logout();
               final LiveDataControllers LiveControler =
               Get.put(LiveDataControllers());
               LiveControler.cleardb();
               final WeekDataControllerss coloumchart =
               Get.put(WeekDataControllerss());
-              Get.delete<WeekDataControllerForPieChart>();
+              Get.delete<PieChartControllerForThisWeek>();
               Get.delete<WeekDataControllerss>();
               coloumchart.resetController();
               weekDataControllerForPieChart.clearUserData();

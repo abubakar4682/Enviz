@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../Theme/theme.dart';
 import '../Utils/colors.dart';
-import '../controller/Summary_Controller/Week_Data_Chart_Controller.dart';
+
 import '../controller/auth_controller/login_controller.dart';
 import '../controller/datacontroller.dart';
 import '../controller/summaryedController.dart';

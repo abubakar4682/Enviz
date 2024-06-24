@@ -1,5 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
   factory DatabaseHelper() => _instance;
@@ -61,6 +62,12 @@ class DatabaseHelper {
 
   Future<void> clearSecondApiData() async {
     final db = await database;
+    await db.delete('second_api_data');
+  }
+
+  Future<void> clearDatabase() async {
+    final db = await database;
+    await db.delete('first_api_data');
     await db.delete('second_api_data');
   }
 }

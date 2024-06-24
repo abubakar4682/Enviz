@@ -1,6 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
-
+//helperfunction for coulum
 class DatabaseHelperForWeek {
   static final DatabaseHelperForWeek _instance = DatabaseHelperForWeek._internal();
   factory DatabaseHelperForWeek() => _instance;

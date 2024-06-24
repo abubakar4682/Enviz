@@ -1,18 +1,14 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
 import 'package:highcharts_demo/screens/SummaryTab/this_month.dart';
-import 'package:highcharts_demo/screens/SummaryTab/this_week.dart';
-
+import 'package:highcharts_demo/screens/SummaryTab/weekly_charts.dart';
 import 'package:highcharts_demo/widgets/custom_text.dart';
 import 'package:highcharts_demo/widgets/side_drawer.dart';
 import 'package:highcharts_demo/widgets/switch_button.dart';
 import 'package:intl/intl.dart';
 
-import '../../JS_Web_View/js_coloum_web.dart';
-import '../../JS_Web_View/pie_chart.dart';
-import '../../controller/Summary_Controller/max_avg_min_controller.dart';
+import '../../controller/Summary_Page_Controller/max_avg_min_controller.dart';
+
 
 class SummaryTab extends StatefulWidget {
   @override
@@ -20,19 +16,13 @@ class SummaryTab extends StatefulWidget {
 }
 
 class _SummaryTabState extends State<SummaryTab> {
-  final summaryController = Get.put(MinMaxAvgValueControllers());
+  final summaryController = Get.put(MinMaxAvgValueController());
   int selectedIndex = 0;
 
   @override
   void initState() {
-    summaryController.fetchData();
-
     super.initState();
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
+    summaryController.fetchData(); // Fetch data when the widget is initialized
   }
 
   @override
@@ -65,164 +55,71 @@ class _SummaryTabState extends State<SummaryTab> {
                 });
               },
             ),
-            Visibility(
-              visible: selectedIndex == 0,
-              child: Column(
-                children: [
+            if (selectedIndex == 0) _buildCurrentTab(),
+            if (selectedIndex == 1) _buildThisMonthTab(),
+          ],
+        ),
+      ),
+    );
+  }
 
+  // Build the UI for the current tab (Summary)
+  Widget _buildCurrentTab() {
+    return Column(
+      children: [
+        _buildSummaryCards(),
+        const SizedBox(height: 40),
+        SizedBox(
+          height: MediaQuery.of(context).size.height,
+          child: WeeklyCharts(),
+        ),
+      ],
+    );
+  }
 
-                  Padding(
-                    padding: const EdgeInsets.only(left: 10, right: 10),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          flex: 1,
-                          child: Container(
-                            height: 130,
-                            width: 150,
-                            decoration: BoxDecoration(
-                              color: Color(0xff002f46),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      CustomText(
-                                        texts: 'cost of usage',
-                                        textColor: Color(0xff009f8d),
-                                      ),
-                                      Padding(
-                                        padding: const EdgeInsets.all(8.0),
-                                        child: SizedBox(
-                                          width: 20,
-                                          height: 20,
-                                          child: Image.asset(
-                                              'assets/images/moneylogo.png'),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  Obx(() {
-                                    final firstApiData =
-                                        summaryController.firstApiData!.value;
-                                    if (firstApiData == null ||
-                                        firstApiData.isEmpty) {
-                                      return CircularProgressIndicator();
-                                    } else {
-                                      if (firstApiData.containsKey("Main")) {
-                                        return _buildUiForMainForPrice(
-                                            firstApiData);
-                                      } else {
-                                        List<String> modifiedKeys = firstApiData
-                                            .keys
-                                            .map((key) => '$key\_[kW]')
-                                            .toList();
-                                        return _buildUiForOtherForPrice(
-                                            modifiedKeys);
-                                      }
-                                    }
-                                  }),
-                                  CustomText(
-                                    texts: 'per hour',
-                                    textColor: const Color(0xb2ffffff),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(
-                          width: 10,
-                        ),
-                        Expanded(
-                          flex: 1,
-                          child: Container(
-                            height: 130,
-                            width: 150,
-                            decoration: BoxDecoration(
-                              color: const Color(0xff002f46),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      CustomText(
-                                        texts: 'power',
-                                        textColor: Color(0xff009f8d),
-                                      ),
-                                      Padding(
-                                        padding: const EdgeInsets.all(8.0),
-                                        child: SizedBox(
-                                          width: 20,
-                                          height: 20,
-                                          child: Image.asset(
-                                              'assets/images/Vector.png'),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  Obx(() {
-                                    final firstApiData =
-                                        summaryController.firstApiData?.value;
-                                    if (firstApiData == null ||
-                                        firstApiData.isEmpty) {
-                                      return CircularProgressIndicator();
-                                    }
-                                    if (firstApiData.containsKey("Main")) {
-                                      return _buildUiForMain(firstApiData);
-                                    } else {
-                                      List<String> modifiedKeys = firstApiData
-                                          .keys
-                                          .map((key) => '$key\_[kW]')
-                                          .toList();
-                                      return _buildUiForOther(modifiedKeys);
-                                    }
-                                  }),
-                                  CustomText(
-                                    texts:
-                                        'as of ${DateFormat('HH:mm').format(DateTime.now())}',
-                                    textColor: const Color(0xb2ffffff),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 40,
-                  ),
-                  Container(
-                      height: MediaQuery.of(context).size.height,
-                      child: DataView()),
-                ],
-              ),
-            ),
-            Visibility(
-              visible: selectedIndex == 1,
-              child: Column(
-                children: [DataViewForThisMonth()],
-              ),
+  // Build the summary cards
+  Widget _buildSummaryCards() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      child: Row(
+        children: [
+          Expanded(child: _buildCostOfUsageCard()),
+          const SizedBox(width: 10),
+          Expanded(child: _buildPowerCard()),
+        ],
+      ),
+    );
+  }
+
+  // Build the cost of usage card
+  Widget _buildCostOfUsageCard() {
+    return Container(
+      height: 130,
+      decoration: BoxDecoration(
+        color: Color(0xff002f46),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildCardHeader('cost of usage', 'assets/images/moneylogo.png'),
+            Obx(() {
+              final firstApiData = summaryController.firstApiData?.value;
+              if (firstApiData == null || firstApiData.isEmpty) {
+                return const CircularProgressIndicator();
+              }
+              if (firstApiData.containsKey("Main")) {
+                return _buildUiForMainForPrice(firstApiData);
+              } else {
+                List<String> modifiedKeys = _getModifiedKeys(firstApiData.keys);
+                return _buildUiForOtherForPrice(modifiedKeys);
+              }
+            }),
+            CustomText(
+              texts: 'per hour',
+              textColor: const Color(0xb2ffffff),
             ),
           ],
         ),
@@ -230,157 +127,183 @@ class _SummaryTabState extends State<SummaryTab> {
     );
   }
 
+  // Build the power card
+  Widget _buildPowerCard() {
+    return Container(
+      height: 130,
+      decoration: BoxDecoration(
+        color: const Color(0xff002f46),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildCardHeader('power', 'assets/images/Vector.png'),
+            Obx(() {
+              final firstApiData = summaryController.firstApiData?.value;
+              if (firstApiData == null || firstApiData.isEmpty) {
+                return const CircularProgressIndicator();
+              }
+              if (firstApiData.containsKey("Main")) {
+                return _buildUiForMain(firstApiData);
+              } else {
+                List<String> modifiedKeys = _getModifiedKeys(firstApiData.keys);
+                return _buildUiForOther(modifiedKeys);
+              }
+            }),
+            CustomText(
+              texts: 'as of ${DateFormat('HH:mm').format(DateTime.now())}',
+              textColor: const Color(0xb2ffffff),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Build card header with title and icon
+  Widget _buildCardHeader(String title, String iconPath) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        CustomText(
+          texts: title,
+          textColor: const Color(0xff009f8d),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: SizedBox(
+            width: 20,
+            height: 20,
+            child: Image.asset(iconPath),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Build the UI for main data for price
   Widget _buildUiForMainForPrice(Map<String, dynamic> firstApiResponse) {
     return Obx(() {
-      final secondApiData = summaryController.secondApiData!.value;
+      final secondApiData = summaryController.secondApiData?.value;
       if (secondApiData == null || secondApiData.isEmpty) {
-        return CircularProgressIndicator();
-      } else {
-        List<double> sumsList = [];
-        for (int i = 0; i < secondApiData["Main_[kW]"].length; i++) {
-          double sum =
-              summaryController.parseDouble(secondApiData["Main_[kW]"][i]);
-          sumsList.add(sum);
-        }
-
-        double lastindexvalue = summaryController.getCurrentHourValue(sumsList);
-
-        return Text(
-          "Rs ${summaryController.formatValued(lastindexvalue * 70)}",
-          style: const TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.w700,
-            height: 1.5,
-            color: Colors.white,
-          ),
-        );
+        return const CircularProgressIndicator();
       }
+      List<double> sumsList = _getSumsList(secondApiData["Main_[kW]"]);
+      double lastIndexValue = summaryController.getCurrentHourValue(sumsList);
+      return Text(
+        "Rs ${summaryController.formatValue(lastIndexValue * 70)}",
+        style: const TextStyle(
+          fontSize: 24,
+          fontWeight: FontWeight.w700,
+          height: 1.5,
+          color: Colors.white,
+        ),
+      );
     });
   }
 
-
-
-
+  // Build the UI for main data
   Widget _buildUiForMain(Map<String, dynamic> firstApiResponse) {
     return Obx(() {
-      final secondApiData = summaryController.secondApiData!.value;
+      final secondApiData = summaryController.secondApiData?.value;
       if (secondApiData == null || secondApiData.isEmpty) {
-        return CircularProgressIndicator();
-      } else {
-        List<double> sumsList = [];
-        for (int i = 0; i < secondApiData["Main_[kW]"].length; i++) {
-          double sum =
-              summaryController.parseDouble(secondApiData["Main_[kW]"][i]);
-          sumsList.add(sum);
-        }
-
-        double lastindexvalue = summaryController.getCurrentHourValue(sumsList);
-
-        return Text(
-          "${summaryController.formatValued(lastindexvalue)}kW",
-          style: const TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.w700,
-            height: 1.5,
-            color: Colors.white,
-          ),
-        );
+        return const CircularProgressIndicator();
       }
+      List<double> sumsList = _getSumsList(secondApiData["Main_[kW]"]);
+      double lastIndexValue = summaryController.getCurrentHourValue(sumsList);
+      return Text(
+        "${summaryController.formatValue(lastIndexValue)}kW",
+        style: const TextStyle(
+          fontSize: 24,
+          fontWeight: FontWeight.w700,
+          height: 1.5,
+          color: Colors.white,
+        ),
+      );
     });
   }
 
-  // Widget _buildUiForOther(List<String> modifiedKeys) {
-  //   return Obx(() {
-  //     final secondApiData = summaryController.secondApiData!.value;
-  //     if (secondApiData == null || secondApiData.isEmpty) {
-  //       return CircularProgressIndicator();
-  //     } else {
-  //       List<double> sumsList = [];
-  //       for (int i = 0; i < secondApiData['1st Floor_[kW]'].length; i++) {
-  //         double sum =
-  //             summaryController.parseDouble(secondApiData['1st Floor_[kW]'][i]) +
-  //                 summaryController.parseDouble(secondApiData['Ground Floor_[kW]'][i]);
-  //         sumsList.add(sum);
-  //       }
-  //
-  //
-  //       double lastindexvalue = summaryController.getLastIndexValue(sumsList);
-  //
-  //       (summaryController.lastMainKWValue * 70 / 1000).toStringAsFixed(2);
-  //
-  //       return Text("${summaryController.formatValued(lastindexvalue)}kW", style: const TextStyle(
-  //         fontSize: 24,
-  //         fontWeight: FontWeight.w700,
-  //         height: 1.5,
-  //         color: Colors.white,
-  //       ),);
-  //     }
-  //   });
-  // }
+  // Build the UI for other data
   Widget _buildUiForOther(List<String> keys) {
     return Obx(() {
       final secondApiData = summaryController.secondApiData?.value;
       if (secondApiData == null || secondApiData.isEmpty) {
-        return CircularProgressIndicator();
+        return const CircularProgressIndicator();
       }
-      List<double> sumsList = [];
-      if (summaryController.result.isNotEmpty) {
-        int lengthOfData = secondApiData[summaryController.result.first]?.length ?? 0;
-        for (int i = 0; i < lengthOfData; i++) {
-          double sum = 0;
-          for (String key in keys) {
-            sum += summaryController.parseDouble(secondApiData[key]?[i] ?? 0);
-          }
-          sumsList.add(sum);
-        }
-      }
-
+      List<double> sumsList = _getSummedDailyValues(secondApiData, keys);
       double lastIndexValue = summaryController.getCurrentHourValue(sumsList);
-      return Text("${summaryController.formatValued(lastIndexValue)}kW", style: const TextStyle(
-        fontSize: 24,
-        fontWeight: FontWeight.w700,
-        color: Colors.white,
-      ));
+      return Text(
+        "${summaryController.formatValue(lastIndexValue)}kW",
+        style: const TextStyle(
+          fontSize: 24,
+          fontWeight: FontWeight.w700,
+          color: Colors.white,
+        ),
+      );
     });
   }
-  Widget _buildUiForOtherForPrice(List<String> modifiedKeys) {
+
+  // Build the UI for other data for price
+  Widget _buildUiForOtherForPrice(List<String> keys) {
     return Obx(() {
-      final secondApiData = summaryController.secondApiData!.value;
+      final secondApiData = summaryController.secondApiData?.value;
       if (secondApiData == null || secondApiData.isEmpty) {
-        return CircularProgressIndicator();
-      } else {
-        List<double> sumsList = [];
-        // for (int i = 0; i < secondApiData['1st Floor_[kW]'].length; i++) {
-        //   double sum =
-        //       summaryController.parseDouble(secondApiData['1st Floor_[kW]'][i]) +
-        //           summaryController.parseDouble(secondApiData['Ground Floor_[kW]'][i]);
-        //   sumsList.add(sum);
-        // }
-        if (summaryController.result.isNotEmpty) {
-          int lengthOfData = secondApiData[summaryController.result.first]?.length ?? 0;
-          for (int i = 0; i < lengthOfData; i++) {
-            double sum = 0;
-            for (String key in modifiedKeys) {
-              sum += summaryController.parseDouble(secondApiData[key]?[i] ?? 0);
-            }
-            sumsList.add(sum);
-          }
-        }
-
-        double lastindexvalue = summaryController.getCurrentHourValue(sumsList);
-
-        (summaryController.lastMainKWValue * 70 / 1000).toStringAsFixed(2 );
-
-        return Text(
-          "Rs ${summaryController.formatValued(lastindexvalue * 70)}",
-          style: const TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.w700,
-            height: 1.5,
-            color: Colors.white,
-          ),
-        );
+        return const CircularProgressIndicator();
       }
+      List<double> sumsList = _getSummedDailyValues(secondApiData, keys);
+      double lastIndexValue = summaryController.getCurrentHourValue(sumsList);
+      return Text(
+        "Rs ${summaryController.formatValue(lastIndexValue * 70)}",
+        style: const TextStyle(
+          fontSize: 24,
+          fontWeight: FontWeight.w700,
+          height: 1.5,
+          color: Colors.white,
+        ),
+      );
     });
+  }
+
+  // Build the UI for "This Month" tab
+  Widget _buildThisMonthTab() {
+    return Column(
+      children: [DataViewForThisMonth()],
+    );
+  }
+
+  // Helper function to get modified keys with '_[kW]' suffix
+  List<String> _getModifiedKeys(Iterable<String> keys) {
+    return keys.map((key) => '$key\_[kW]').toList();
+  }
+
+  // Helper function to get sums list from API data
+  List<double> _getSumsList(List<dynamic> apiData) {
+    return apiData.map((data) => summaryController.parseDouble(data)).toList();
+  }
+
+  // Helper function to sum daily values across multiple keys
+  List<double> _getSummedDailyValues(Map<String, dynamic> data, List<String> keys) {
+    List<double> dailyValues = [];
+    int minLength = _getMinLength(data, keys);
+
+    for (int i = 0; i < minLength; i++) {
+      double sum = keys
+          .where((key) => data.containsKey(key))
+          .map((key) => summaryController.parseDouble(data[key][i]))
+          .reduce((a, b) => a + b);
+      dailyValues.add(sum);
+    }
+    return dailyValues;
+  }
+
+  // Helper function to get the minimum length among the keys
+  int _getMinLength(Map<String, dynamic> data, List<String> keys) {
+    return keys
+        .where((key) => data.containsKey(key))
+        .map((key) => data[key].length)
+        .reduce((a, b) => a < b ? a : b);
   }
 }
