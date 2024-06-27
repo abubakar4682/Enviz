@@ -1,4 +1,3 @@
-
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SharedPreferencesService {
@@ -48,5 +47,4 @@ class SharedPreferencesService {
       throw ArgumentError('Unsupported type: $T');
     }
   }
-
 }

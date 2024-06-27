@@ -1,11 +1,8 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
-import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
 
 import '../controller/datacontroller.dart';
-import 'custom_text.dart';
+
 
 class MinAvgValueBox extends StatefulWidget {
   const MinAvgValueBox({
@@ -33,10 +30,10 @@ class _MinAvgValueBoxState extends State<MinAvgValueBox> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       width: MediaQuery.of(context).size.width,
       child: Padding(
-        padding: EdgeInsets.only(left: 10, right: 10),
+        padding: const EdgeInsets.only(left: 10, right: 10),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -46,18 +43,18 @@ class _MinAvgValueBoxState extends State<MinAvgValueBox> {
 
                   children: [
                     buildBox('Min :', viewModel.result[0], 'assets/images/Minus.png'),
-                    SizedBox(
+                    const SizedBox(
                       width: 10,
                     ),
                     buildBox('Max :', viewModel.result[1], 'assets/images/Plus.png'),
-                    SizedBox(
+                    const SizedBox(
                       width: 10,
                     ),
                     buildBox('Avg :', viewModel.result[2], 'assets/images/Disconnected.png'),
                   ],
                 );
               } else {
-                return SizedBox();
+                return const SizedBox();
               }
             }),
           ],
@@ -74,7 +71,7 @@ class _MinAvgValueBoxState extends State<MinAvgValueBox> {
 height: 85,
       width: 120,
       decoration: BoxDecoration(
-        color: Color(0xff002f46),
+        color: const Color(0xff002f46),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Padding(
@@ -88,7 +85,7 @@ height: 85,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(label,
-                style: TextStyle(
+                style: const TextStyle(
                     color: Color(0xff009f8d)
                 ),
                 ),

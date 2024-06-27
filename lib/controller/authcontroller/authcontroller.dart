@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:syncfusion_flutter_charts/charts.dart';
+
 import '../../data/exceptions/app_exceptions.dart';
 import '../../repository/register_view_repo.dart';
 import '../../widgets/bottom_navigation.dart';
@@ -16,8 +16,7 @@ class RegisterViewController extends GetxController {
   RxList<Map<String, dynamic>> kwData = <Map<String, dynamic>>[].obs;
   final mobileFocusNode = FocusNode().obs;
   RxBool loading = false.obs;
- // late MyDataModel myDataModel;
-  late TooltipBehavior _tooltip;
+
   RxString selectedStartDate = '2023-12-07'.obs;
   RxString selectedEndDate = '2023-12-07'.obs;
   RxList<double> mainKWData = <double>[].obs;
@@ -233,7 +232,7 @@ class RegisterViewController extends GetxController {
   @override
   void onInit() {
     fetchData();
-    _tooltip = TooltipBehavior(enable: true);
+
     // TODO: implement onInit
     super.onInit();
   }

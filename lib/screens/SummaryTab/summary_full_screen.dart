@@ -9,20 +9,55 @@ import 'package:intl/intl.dart';
 
 import '../../controller/Summary_Page_Controller/max_avg_min_controller.dart';
 
-
 class SummaryTab extends StatefulWidget {
   @override
   State<SummaryTab> createState() => _SummaryTabState();
 }
 
-class _SummaryTabState extends State<SummaryTab> {
+class _SummaryTabState extends State<SummaryTab> with TickerProviderStateMixin {
   final summaryController = Get.put(MinMaxAvgValueController());
   int selectedIndex = 0;
+  late AnimationController _fadeController;
+  late Animation<double> _fadeAnimation;
+  late AnimationController _slideController;
+  late Animation<Offset> _slideAnimation;
 
   @override
   void initState() {
     super.initState();
+
     summaryController.fetchData(); // Fetch data when the widget is initialized
+
+    _fadeController = AnimationController(
+      duration: const Duration(seconds: 3),
+      vsync: this,
+    );
+    _fadeAnimation = CurvedAnimation(
+      parent: _fadeController,
+      curve: Curves.bounceOut ,
+    );
+
+    _slideController = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    );
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(1.0, 0.0),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _slideController,
+      curve: Curves.easeInOut,
+    ));
+
+    _fadeController.forward();
+    _slideController.forward();
+  }
+
+  @override
+  void dispose() {
+    _fadeController.dispose();
+    _slideController.dispose();
+    super.dispose();
   }
 
   @override
@@ -44,20 +79,25 @@ class _SummaryTabState extends State<SummaryTab> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            SwitchWidget(
-              selectedIndex: selectedIndex,
-              onToggle: (index) {
-                setState(() {
-                  selectedIndex = index!;
-                });
-              },
-            ),
-            if (selectedIndex == 0) _buildCurrentTab(),
-            if (selectedIndex == 1) _buildThisMonthTab(),
-          ],
+      body: FadeTransition(
+        opacity: _fadeAnimation,
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              SwitchWidget(
+                selectedIndex: selectedIndex,
+                onToggle: (index) {
+                  setState(() {
+                    selectedIndex = index!;
+                    _slideController.reset();
+                    _slideController.forward();
+                  });
+                },
+              ),
+              if (selectedIndex == 0) _buildCurrentTab(),
+              if (selectedIndex == 1) _buildThisMonthTab(),
+            ],
+          ),
         ),
       ),
     );
@@ -65,15 +105,18 @@ class _SummaryTabState extends State<SummaryTab> {
 
   // Build the UI for the current tab (Summary)
   Widget _buildCurrentTab() {
-    return Column(
-      children: [
-        _buildSummaryCards(),
-        const SizedBox(height: 40),
-        SizedBox(
-          height: MediaQuery.of(context).size.height,
-          child: WeeklyCharts(),
-        ),
-      ],
+    return SlideTransition(
+      position: _slideAnimation,
+      child: Column(
+        children: [
+          _buildSummaryCards(),
+          const SizedBox(height: 40),
+          SizedBox(
+            height: MediaQuery.of(context).size.height,
+            child: WeeklyCharts(),
+          ),
+        ],
+      ),
     );
   }
 
@@ -269,8 +312,11 @@ class _SummaryTabState extends State<SummaryTab> {
 
   // Build the UI for "This Month" tab
   Widget _buildThisMonthTab() {
-    return Column(
-      children: [DataViewForThisMonth()],
+    return SlideTransition(
+      position: _slideAnimation,
+      child: Column(
+        children: [DataViewForThisMonth()],
+      ),
     );
   }
 

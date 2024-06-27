@@ -23,7 +23,7 @@ class _LineChartForDailyAnalysisState extends State<LineChartForDailyAnalysis> {
     return Obx(() {
       // Display loading indicator while fetching data
       if (apiController.firstApiResponse.value == null) {
-        return Center(child: CircularProgressIndicator());
+        return const Center(child: CircularProgressIndicator());
       }
 
       // Display UI based on the response data
@@ -42,7 +42,7 @@ class _LineChartForDailyAnalysisState extends State<LineChartForDailyAnalysis> {
 
     return Obx(() {
       if (apiController.secondApiResponse.value == null) {
-        return Center(child: CircularProgressIndicator());
+        return const Center(child: CircularProgressIndicator());
       } else {
         List<double> allDailyValues = _getDailyValues(apiController.secondApiResponse.value!, "Main_[kW]");
         return LineChartScreen( alldailyvalues: allDailyValues);
@@ -56,7 +56,7 @@ class _LineChartForDailyAnalysisState extends State<LineChartForDailyAnalysis> {
 
     return Obx(() {
       if (apiController.secondApiResponse.value == null) {
-        return Center(child: CircularProgressIndicator());
+        return const Center(child: CircularProgressIndicator());
       } else {
         List<double> allDailyValues = _getSummedDailyValues(apiController.secondApiResponse.value!, modifiedKeys);
         return LineChartScreen( alldailyvalues: allDailyValues,);

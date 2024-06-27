@@ -105,7 +105,7 @@ class _DailyAnalysisState extends State<DailyAnalysis> {
                   const PowerDetailsMinMaxAvg(),
                   Obx(() {
                     if (apiController.firstApiResponse.value == null) {
-                      return Center(child: CircularProgressIndicator());
+                      return const Center(child: CircularProgressIndicator());
                     } else if (apiController.firstApiResponse.value!.containsKey("Main")) {
                       return buildMainDataUI();
                     } else {
@@ -173,7 +173,7 @@ class _DailyAnalysisState extends State<DailyAnalysis> {
           children: [
             Text(
               DateFormat('EEEE, MMM dd, yyyy').format(_selectedDate),
-              style: TextStyle(fontSize: 16),
+              style: const TextStyle(fontSize: 16),
             ),
             IconButton(
               icon: const Icon(Icons.calendar_today, size: 20),

@@ -50,7 +50,7 @@ class _AreaChartScreenState extends State<AreaChartScreen> {
         height: 400,
         child: Obx(() {
           if (historicalController.isLoading.value) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           } else if (historicalController.kwData.isEmpty) {
             return Center(child: Text(historicalController.errorMessage.value.isNotEmpty
                 ? historicalController.errorMessage.value

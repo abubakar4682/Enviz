@@ -26,11 +26,11 @@ class SelectStartAndEndDate extends StatelessWidget {
           Expanded(
             flex: 1,
             child: Container(
-              margin:  EdgeInsets.fromLTRB(0, 0, 10, 0),
-              padding:  EdgeInsets.fromLTRB(26, 4, 26, 0),
+              margin:  const EdgeInsets.fromLTRB(0, 0, 10, 0),
+              padding:  const EdgeInsets.fromLTRB(26, 4, 26, 0),
               height:  40,
               decoration:  BoxDecoration (
-                color:  Color(0xffffffff),
+                color:  const Color(0xffffffff),
                 borderRadius:  BorderRadius.circular(60),
                 boxShadow:  const [
                   BoxShadow(
@@ -46,7 +46,7 @@ class SelectStartAndEndDate extends StatelessWidget {
                         () => Text('${controller.startDate.value}'),
                   ),
                   IconButton(
-                    icon: Icon(Icons.arrow_drop_down,size: 30,),
+                    icon: const Icon(Icons.arrow_drop_down,size: 30,),
                     onPressed: () =>{ controller.selectStartDate(context)
 
                     },
@@ -56,18 +56,18 @@ class SelectStartAndEndDate extends StatelessWidget {
               ),
             ),
           ),
-          SizedBox(height: 40),
+          const SizedBox(height: 40),
 
 
 
           Expanded(
             flex: 1,
             child: Container(
-              margin:  EdgeInsets.fromLTRB(0, 0, 10, 0),
-              padding:  EdgeInsets.fromLTRB(26, 4, 26, 0),
+              margin:  const EdgeInsets.fromLTRB(0, 0, 10, 0),
+              padding:  const EdgeInsets.fromLTRB(26, 4, 26, 0),
               height:  40,
               decoration:  BoxDecoration (
-                color:  Color(0xffffffff),
+                color:  const Color(0xffffffff),
                 borderRadius:  BorderRadius.circular(60),
                 boxShadow:  const [
                   BoxShadow(

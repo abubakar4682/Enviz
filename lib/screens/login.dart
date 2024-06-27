@@ -4,8 +4,7 @@ import '../Theme/theme.dart';
 import '../Utils/colors.dart';
 
 import '../controller/auth_controller/login_controller.dart';
-import '../controller/datacontroller.dart';
-import '../controller/summaryedController.dart';
+
 import '../widgets/cutom_button.dart';
 
 class Login extends StatefulWidget {
@@ -17,8 +16,6 @@ class Login extends StatefulWidget {
 
 class _LoginState extends State<Login> {
   final authController = Get.put(LoginControllers());
-
- // final summaryController = Get.put(SummaryysControllers());
 
 
   @override
@@ -33,7 +30,7 @@ class _LoginState extends State<Login> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(
+              const SizedBox(
                 height: 20,
               ),
               const Padding(
@@ -48,7 +45,7 @@ class _LoginState extends State<Login> {
                   ),
                 ),
               ),
-              SizedBox(
+              const SizedBox(
                 height: 50,
               ),
               Padding(
@@ -67,7 +64,7 @@ class _LoginState extends State<Login> {
                 authController.usernamenameController.text = value,
                 decoration: InputDecoration(
                   labelText: 'Username',
-                  prefixIcon: Icon(Icons.person),
+                  prefixIcon: const Icon(Icons.person),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10.0),
                   ),
@@ -83,7 +80,7 @@ class _LoginState extends State<Login> {
               const SizedBox(height: 30),
               Obx(() {
                 return authController.loading.value
-                    ? Center(child: CircularProgressIndicator())
+                    ? const Center(child: CircularProgressIndicator())
                     : FilledRedButton(
                   onPressed: () async {
                     authController.userRegister();
@@ -93,7 +90,7 @@ class _LoginState extends State<Login> {
                   text: 'Login',
                 );
               }),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               Center(
                 child: TextButton(
                   onPressed: () {
@@ -120,14 +117,14 @@ class _LoginState extends State<Login> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Forgot Password'),
-          content: Text('Kindly contact the admin.'),
+          title: const Text('Forgot Password'),
+          content: const Text('Kindly contact the admin.'),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop(); // Close the dialog
               },
-              child: Text('OK'),
+              child: const Text('OK'),
             ),
           ],
         );
@@ -148,11 +145,11 @@ class PasswordTextField extends StatelessWidget {
       obscureText: !authController.showPassword.value,
       decoration: InputDecoration(
         labelText: 'Password',
-        prefixIcon: Icon(Icons.lock),
+        prefixIcon: const Icon(Icons.lock),
         suffixIcon: IconButton(
           icon: authController.showPassword.value
-              ? Icon(Icons.visibility)
-              : Icon(Icons.visibility_off),
+              ? const Icon(Icons.visibility)
+              : const Icon(Icons.visibility_off),
           onPressed: () {
             authController.showPassword.toggle();
           },

@@ -28,7 +28,7 @@ class FilledRedButton extends StatelessWidget {
         // margin: const EdgeInsets.only(left: 30, right: 30, top: 20),
         margin: const EdgeInsets.only(left: 10, right: 10),
         decoration: BoxDecoration(
-          color:  Color(0xff009f8d),
+          color:  const Color(0xff009f8d),
           borderRadius: BorderRadius.circular(30),
         ),
         child: Center(

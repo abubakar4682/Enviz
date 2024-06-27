@@ -20,14 +20,14 @@ class EnViz extends StatelessWidget {
   final List<Map<String, dynamic>> kwData = [];
   final ThemeController themeController = Get.put(ThemeController());
 
+   EnViz({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
       theme: ThemeData.light(),
-      // Sets the light theme.
-      // Removed darkTheme since it's not needed if you're always using light theme
       themeMode: ThemeMode.light,
       home: const SplashScreen(),
     );

@@ -1,11 +1,7 @@
 import 'dart:async';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
-
-import 'package:path_provider/path_provider.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -24,8 +20,6 @@ import 'dart:typed_data';
 
 import '../../pdf/pdf_helper_function.dart';
 
-
-import '../../widgets/side_drawer.dart';
 class HistoricalTab extends StatefulWidget {
   const HistoricalTab({Key? key}) : super(key: key);
 
